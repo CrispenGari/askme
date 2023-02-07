@@ -1,0 +1,54 @@
+version: "3.9"
+services:
+  mysqldb:
+    image: mysql:5.7
+    container_name: mysqlcontainer
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/0_init.sql
+    ports:
+      - 3306:3306
+    expose:
+      - 3306
+    environment:
+      MYSQL_DATABASE: "todos"
+      MYSQL_USER: "admin"
+      MYSQL_PASSWORD: "password"
+      MYSQL_ROOT_PASSWORD: "password"
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysqldb
+      MYSQL_HOST: mysqldb
+    restart: on-failure
+    networks:
+      - internalnet
+  redis:
+    image: redis:7.0.8-alpine
+    container_name: rediscontainer
+
+  expressapp:
+    container_name: api
+    build: .
+    image: expressapp:1.0
+    ports:
+      - "3001:3001"
+    expose:
+      - "3001"
+    environment:
+      DB_HOST: mysqldb
+      DB_PORT: 3306
+      DB_USER: "admin"
+      DB_PASSWORD: "password"
+      DB_NAME: todos
+      DB_CONNECTION_LIMIT: 500
+      SERVICE_TAGS: dev
+      SERVICE_NAME: expressapp
+      PORT: 3001
+    depends_on:
+      - mysqldb
+    networks:
+      - internalnet
+networks:
+  internalnet:
+    driver: bridge
+volumes:
+  database:

@@ -1,0 +1,13 @@
+{
+  "name": "@askme/common",
+  "version": "1.0.0",
+  "description": "this are the shared things between packages",
+  "main": "src/index.ts",
+  "author": "CrispenGari",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.1",
+    "@types/node": "^18.11.19",
+    "ts-node-dev": "^2.0.0"
+  }
+}
