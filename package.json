@@ -1,0 +1,15 @@
+{
+  "name": "askme",
+  "private": true,
+  "scripts": {
+    "start": "concurrently \"wsrun --parallel start\"",
+    "start:tunnel": "concurrently \"wsrun --parallel start:tunnel\""
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "concurrently": "^7.6.0",
+    "wsrun": "^5.2.4"
+  }
+}

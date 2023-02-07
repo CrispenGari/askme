@@ -1,0 +1,37 @@
+{
+  "name": "@askme/server",
+  "version": "1.0.0",
+  "description": "this is the backend server API for askme mobile app.",
+  "main": "src/server.ts",
+  "author": "CrispenGari",
+  "license": "MIT",
+  "scripts": {
+    "start": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "start:tunnel": "ts-node-dev --respawn --transpile-only src/server.ts"
+  },
+  "dependencies": {
+    "@askme/common": "1.0.0",
+    "@fastify/cors": "^8.2.0",
+    "@fastify/websocket": "^7.1.2",
+    "@prisma/client": "^4.9.0",
+    "@trpc/server": "^10.10.0",
+    "argon2": "^0.30.3",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "fastify": "^4.12.0",
+    "ioredis": "^5.3.0",
+    "jsonwebtoken": "^9.0.0",
+    "superjson": "^1.12.2",
+    "twilio": "^3.84.1",
+    "zod": "^3.20.2"
+  },
+  "devDependencies": {
+    "@types/argon2": "^0.15.0",
+    "@types/express": "^4.17.17",
+    "@types/ioredis": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.1",
+    "@types/node": "^18.11.19",
+    "node-env-types": "^1.0.6",
+    "ts-node-dev": "^2.0.0"
+  }
+}
