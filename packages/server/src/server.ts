@@ -6,7 +6,7 @@ export { type AppRouter } from "./routes/app.routes";
 import { appRouter } from "./routes/app.routes";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
-import { domain } from "@askme/common";
+import ws from "@fastify/websocket";
 
 _();
 
@@ -24,12 +24,13 @@ const fastify = Fastify({
 
 fastify.register(cors, {
   credentials: true,
-  origin: ["*"],
+  origin: "*",
 });
-
+fastify.register(ws);
 fastify.register(fastifyTRPCPlugin, {
   prefix: "/api/trpc",
   trpcOptions: { router: appRouter, createContext },
+  useWSS: true,
 });
 
 fastify.listen({ port: PORT, host: HOST }, (error, address) => {

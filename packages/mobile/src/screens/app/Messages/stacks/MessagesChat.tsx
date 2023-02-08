@@ -4,7 +4,7 @@ import React from "react";
 const MessagesChat = () => {
   return (
     <View>
-      <Text>MessagesChat</Text>
+      <Text></Text>
     </View>
   );
 };

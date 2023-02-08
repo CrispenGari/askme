@@ -10,12 +10,18 @@ import {
 } from "react-native";
 import React from "react";
 import { AuthNavProps } from "../../../params";
-import { COLORS, FONTS } from "../../../constants";
+import { COLORS, FONTS, TOKEN_KEY } from "../../../constants";
 import { LinearGradient } from "expo-linear-gradient";
 import { styles } from "../../../styles";
 import * as Animatable from "react-native-animatable";
-import { CustomTextInput, Wrapper } from "../../../components";
+import {
+  CircularIndicator,
+  CustomTextInput,
+  Wrapper,
+} from "../../../components";
 import { MaterialIcons } from "@expo/vector-icons";
+import { trpc } from "../../../utils/trpc";
+import { store } from "../../../utils";
 const avatars: Array<string> = Array(15)
   .fill(null)
   .map(
@@ -26,12 +32,46 @@ const avatars: Array<string> = Array(15)
   );
 
 const Profile: React.FunctionComponent<AuthNavProps<"Profile">> = ({
-  navigation,
   route,
 }) => {
   const [nickname, setNickname] = React.useState<string>("");
   const [error, setError] = React.useState<string>("");
   const [avatarIndex, setAvatarIndex] = React.useState<number>(0);
+  const { mutate, data, isLoading, error: e } = trpc.user.profile.useMutation();
+  const save = async () => {
+    if (nickname.trim().length < 3) {
+      setError("You nickname must be at least 3 characters long.");
+      return;
+    }
+    await mutate({
+      avatar: avatars[avatarIndex],
+      nickname: nickname.trim().toLowerCase(),
+      phoneNumber: route.params.phoneNumber,
+    });
+  };
+
+  React.useEffect(() => {
+    let mounted: boolean = true;
+    if (mounted && !!e) {
+      setError(e.message);
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [e]);
+
+  React.useEffect(() => {
+    let mounted: boolean = true;
+    if (mounted && !!data?.jwt) {
+      (async () => {
+        const { jwt } = data;
+        await store(TOKEN_KEY, jwt);
+      })();
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [data]);
 
   return (
     <View style={{ flex: 1 }}>
@@ -58,6 +98,7 @@ const Profile: React.FunctionComponent<AuthNavProps<"Profile">> = ({
             containerStyles={{
               width: "100%",
               alignItems: "center",
+              padding: 10,
             }}
           >
             <View
@@ -209,7 +250,8 @@ const Profile: React.FunctionComponent<AuthNavProps<"Profile">> = ({
 
               <TouchableOpacity
                 activeOpacity={0.7}
-                onPress={() => {}}
+                onPress={save}
+                disabled={isLoading}
                 style={[
                   styles.button,
                   {
@@ -217,12 +259,22 @@ const Profile: React.FunctionComponent<AuthNavProps<"Profile">> = ({
                     alignSelf: "flex-start",
                     marginTop: 30,
                     marginBottom: 0,
+                    justifyContent: "center",
+                    flexDirection: "row",
                   },
                 ]}
               >
-                <Text style={[styles.button__text, { fontSize: 20 }]}>
+                <Text
+                  style={[
+                    styles.button__text,
+                    { fontSize: 20, marginRight: isLoading ? 10 : 0 },
+                  ]}
+                >
                   Save
                 </Text>
+                {isLoading ? (
+                  <CircularIndicator color={COLORS.main} size={20} />
+                ) : null}
               </TouchableOpacity>
             </View>
           </Wrapper>

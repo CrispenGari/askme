@@ -12,7 +12,7 @@
   "dependencies": {
     "@askme/common": "1.0.0",
     "@fastify/cors": "^8.2.0",
-    "@fastify/websocket": "^7.1.2",
+    "@fastify/websocket": "7.1.2",
     "@prisma/client": "^4.9.0",
     "@trpc/server": "^10.10.0",
     "argon2": "^0.30.3",

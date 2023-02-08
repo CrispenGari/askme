@@ -6,6 +6,7 @@
 			TWILIO_AUTH_TOKEN : string;
 			TRIAL_PHONE_NUMBER : string;
 			NODE_ENV : string;
+			JWT_SECRETE : string;
 
     }
   }

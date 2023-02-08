@@ -12,9 +12,13 @@ datasource db {
 
 model User {
   id       String  @unique @default(uuid())
+
   phoneNumber String @unique
-  password String
   avatar   String?
+  nickname String?
+  bio String?
+  isLoggedIn Boolean @default(false)
+  isOnline Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

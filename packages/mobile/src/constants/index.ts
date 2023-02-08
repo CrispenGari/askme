@@ -1,5 +1,6 @@
 import { Dimensions } from "react-native";
 
+export const TOKEN_KEY: string = "jwt";
 export const COLORS = {
   main: "#8E806A",
   primary: "#C3B091",

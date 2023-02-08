@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, Image } from "react-native";
 import React from "react";
-import { trpc } from "../../../utils/trpc";
+
 import { COLORS, FONTS } from "../../../constants";
 import { AuthNavProps } from "../../../params";
 import { LinearGradient } from "expo-linear-gradient";
@@ -10,9 +10,6 @@ import { styles } from "../../../styles";
 const Welcome: React.FunctionComponent<AuthNavProps<"Welcome">> = ({
   navigation,
 }) => {
-  const { data, isFetched, isError, isLoading } = trpc.hello.greeting.useQuery({
-    name: "TRPC and React Native",
-  });
   return (
     <View style={{ flex: 1 }}>
       <LinearGradient

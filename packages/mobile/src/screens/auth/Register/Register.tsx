@@ -13,12 +13,59 @@ import { COLORS, FONTS } from "../../../constants";
 import { LinearGradient } from "expo-linear-gradient";
 import { styles } from "../../../styles";
 import * as Animatable from "react-native-animatable";
-import { CustomTextInput } from "../../../components";
+import { CircularIndicator, CustomTextInput } from "../../../components";
+import { trpc } from "../../../utils/trpc";
 const Register: React.FunctionComponent<AuthNavProps<"Register">> = ({
   navigation,
 }) => {
+  const {
+    mutate,
+    data,
+    error: e,
+    isLoading,
+  } = trpc.user.register.useMutation();
   const [phoneNumber, setPhoneNumber] = React.useState<string>("");
+  const [code, setCode] = React.useState<string>("+27");
   const [error, setError] = React.useState<string>("");
+
+  const register = async () => {
+    const _phoneNumber = phoneNumber.startsWith("0")
+      ? phoneNumber.substring(1).replace(/\s/, "")
+      : phoneNumber.replace(/\s/, "");
+
+    if (_phoneNumber.length !== 9) {
+      setError("Invalid phone number");
+      return;
+    } else {
+      setError("");
+    }
+
+    await mutate({
+      phoneNumber: code + _phoneNumber,
+    });
+  };
+
+  React.useEffect(() => {
+    let mounted: boolean = true;
+    if (mounted && !!data) {
+      navigation.replace("Verify", {
+        phoneNumber: data.user.phoneNumber,
+      });
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [data]);
+
+  React.useEffect(() => {
+    let mounted: boolean = true;
+    if (mounted && !!e) {
+      setError(e.message);
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [e]);
   return (
     <View style={{ flex: 1 }}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} style={{ flex: 1 }}>
@@ -94,6 +141,7 @@ const Register: React.FunctionComponent<AuthNavProps<"Register">> = ({
               alignItems: "center",
               width: "100%",
               maxWidth: 500,
+              padding: 10,
             }}
             behavior="padding"
             enabled
@@ -109,7 +157,7 @@ const Register: React.FunctionComponent<AuthNavProps<"Register">> = ({
               }}
               error={error}
               errorStyle={[styles.p, { color: "red", marginTop: 5 }]}
-              leftIcon={<Text style={[styles.p]}>+27</Text>}
+              leftIcon={<Text style={[styles.p]}>{code}</Text>}
               keyboardType="phone-pad"
               placeholder="phone number"
               containerStyles={{
@@ -121,11 +169,8 @@ const Register: React.FunctionComponent<AuthNavProps<"Register">> = ({
             />
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={() => {
-                navigation.replace("Verify", {
-                  phoneNumber,
-                });
-              }}
+              onPress={register}
+              disabled={isLoading}
               style={[
                 styles.button,
                 {
@@ -133,12 +178,22 @@ const Register: React.FunctionComponent<AuthNavProps<"Register">> = ({
                   alignSelf: "flex-start",
                   marginTop: 30,
                   marginBottom: 0,
+                  justifyContent: "center",
+                  flexDirection: "row",
                 },
               ]}
             >
-              <Text style={[styles.button__text, { fontSize: 20 }]}>
+              <Text
+                style={[
+                  styles.button__text,
+                  { fontSize: 20, marginRight: isLoading ? 10 : 0 },
+                ]}
+              >
                 Continue
               </Text>
+              {isLoading ? (
+                <CircularIndicator color={COLORS.main} size={20} />
+              ) : null}
             </TouchableOpacity>
           </KeyboardAvoidingView>
         </LinearGradient>

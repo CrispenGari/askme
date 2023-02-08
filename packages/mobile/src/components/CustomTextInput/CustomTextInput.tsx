@@ -56,7 +56,7 @@ const CustomTextInput: React.FunctionComponent<Partial<Props>> = ({
   errorStyle,
 }) => {
   return (
-    <View>
+    <View style={{ width: "100%" }}>
       {label ? <Text style={labelStyle}>{label}</Text> : null}
       <View
         style={[
