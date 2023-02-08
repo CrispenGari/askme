@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const registerSchema = z.object({
   phoneNumber: z.string(),
+  duid: z.string(),
 });
 
 export const resendVerificationCodeSchema = z.object({
@@ -18,6 +19,6 @@ export const profileSchema = z.object({
   phoneNumber: z.string(),
   nickname: z.string(),
 });
-export const meSchema = z.object({
-  jwt: z.string(),
+export const onAuthStateChangeSchema = z.object({
+  duid: z.string(),
 });

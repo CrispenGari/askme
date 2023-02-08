@@ -17,6 +17,10 @@ model User {
   avatar   String?
   nickname String?
   bio String?
+  // device Id
+  duid String
+
+  // user state
   isLoggedIn Boolean @default(false)
   isOnline Boolean @default(false)
 

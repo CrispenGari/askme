@@ -22,6 +22,8 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { trpc } from "../../../utils/trpc";
 import { store } from "../../../utils";
+import { useDispatch } from "react-redux";
+import { setUser } from "../../../actions";
 const avatars: Array<string> = Array(15)
   .fill(null)
   .map(
@@ -37,6 +39,7 @@ const Profile: React.FunctionComponent<AuthNavProps<"Profile">> = ({
   const [nickname, setNickname] = React.useState<string>("");
   const [error, setError] = React.useState<string>("");
   const [avatarIndex, setAvatarIndex] = React.useState<number>(0);
+  const dispatch = useDispatch();
   const { mutate, data, isLoading, error: e } = trpc.user.profile.useMutation();
   const save = async () => {
     if (nickname.trim().length < 3) {
@@ -64,14 +67,15 @@ const Profile: React.FunctionComponent<AuthNavProps<"Profile">> = ({
     let mounted: boolean = true;
     if (mounted && !!data?.jwt) {
       (async () => {
-        const { jwt } = data;
+        const { jwt, user } = data;
+        dispatch(setUser(user));
         await store(TOKEN_KEY, jwt);
       })();
     }
     return () => {
       mounted = false;
     };
-  }, [data]);
+  }, [data, dispatch]);
 
   return (
     <View style={{ flex: 1 }}>

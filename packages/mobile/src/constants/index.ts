@@ -1,5 +1,10 @@
 import { Dimensions } from "react-native";
 
+export const constants = {
+  SET_DUID: "SET_DUID",
+  SET_USER: "SET_USER",
+  SHOW_APP_TABS: "SHOW_APP_TABS",
+};
 export const TOKEN_KEY: string = "jwt";
 export const COLORS = {
   main: "#8E806A",

@@ -1,4 +1,5 @@
 import { User } from "@prisma/client";
+import EventEmitter from "events";
 import jwt from "jsonwebtoken";
 import { client } from "../twilio";
 
@@ -36,3 +37,7 @@ export const verifyJwt = async (token: string) => {
     id: string;
   };
 };
+
+export const ee = new EventEmitter({
+  captureRejections: true,
+});

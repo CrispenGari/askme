@@ -1,6 +1,7 @@
 import "react-native-gesture-handler";
-import { LogBox, View, Text } from "react-native";
+import { LogBox, View, Text, StatusBar } from "react-native";
 import TRPCProvider from "./src/providers/TRPCProvider";
+import ReactReduxProvider from "./src/providers/ReactReduxProvider";
 import Routes from "./src/routes/Routes";
 import { useFonts } from "expo-font";
 import { Fonts } from "./src/constants";
@@ -14,15 +15,19 @@ const App = () => {
   if (!loaded) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <StatusBar barStyle={"light-content"} />
         <Text>Loading...</Text>
       </View>
     );
   }
   return (
     <TRPCProvider>
-      <View style={{ flex: 1 }}>
-        <Routes />
-      </View>
+      <ReactReduxProvider>
+        <View style={{ flex: 1 }}>
+          <StatusBar barStyle={"light-content"} />
+          <Routes />
+        </View>
+      </ReactReduxProvider>
     </TRPCProvider>
   );
 };

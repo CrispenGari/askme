@@ -5,9 +5,12 @@ import { TabIcon } from "../../components";
 import { AntDesign, Feather, Ionicons } from "@expo/vector-icons";
 import { Messages, Settings, Profile } from "../../screens/app";
 import { COLORS } from "../../constants";
+import { useSelector } from "react-redux";
+import { StateType } from "../../types";
 
 const Tab = createBottomTabNavigator<AppParamList>();
 const App = () => {
+  const { showAppTabs } = useSelector((state: StateType) => state);
   return (
     <Tab.Navigator
       initialRouteName="Messages"

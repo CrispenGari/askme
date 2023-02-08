@@ -15,6 +15,7 @@ import { styles } from "../../../styles";
 import * as Animatable from "react-native-animatable";
 import { CircularIndicator, CustomTextInput } from "../../../components";
 import { trpc } from "../../../utils/trpc";
+import { getDUID } from "../../../utils";
 const Register: React.FunctionComponent<AuthNavProps<"Register">> = ({
   navigation,
 }) => {
@@ -32,6 +33,8 @@ const Register: React.FunctionComponent<AuthNavProps<"Register">> = ({
     const _phoneNumber = phoneNumber.startsWith("0")
       ? phoneNumber.substring(1).replace(/\s/, "")
       : phoneNumber.replace(/\s/, "");
+    const duid = await getDUID();
+    if (!!!duid) return;
 
     if (_phoneNumber.length !== 9) {
       setError("Invalid phone number");
@@ -42,6 +45,7 @@ const Register: React.FunctionComponent<AuthNavProps<"Register">> = ({
 
     await mutate({
       phoneNumber: code + _phoneNumber,
+      duid,
     });
   };
 

@@ -6,10 +6,38 @@ import { AuthNavProps } from "../../../params";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Animatable from "react-native-animatable";
 import { styles } from "../../../styles";
-
+import { getDUID, setDUID } from "../../../utils";
+import { useDispatch } from "react-redux";
+import { setDuid } from "../../../actions";
+import Circular from "../../../components/CircularIndicator/CircularIndicator";
+import { trpc } from "../../../utils/trpc";
 const Welcome: React.FunctionComponent<AuthNavProps<"Welcome">> = ({
   navigation,
 }) => {
+  const dispatch = useDispatch();
+
+  React.useEffect(() => {
+    let mounted: boolean = true;
+
+    if (mounted) {
+      (async () => {
+        const duid = await getDUID();
+        if (!!!duid) {
+          const value = await setDUID();
+          if (value) {
+            const duid = await getDUID();
+            dispatch(setDuid(duid as string));
+          }
+        } else {
+          dispatch(setDuid(duid));
+        }
+      })();
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [dispatch]);
+
   return (
     <View style={{ flex: 1 }}>
       <LinearGradient
