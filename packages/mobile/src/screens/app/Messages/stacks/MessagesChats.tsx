@@ -24,8 +24,8 @@ const MessagesChats: React.FunctionComponent<
     let mounted: boolean = true;
     if (mounted && !!logout) {
       (async () => {
-        await store(TOKEN_KEY, logout.jwt);
-        dispatch(setUser(logout.user));
+        // await store(TOKEN_KEY, logout.jwt);
+        // dispatch(setUser(logout.user ?? null));
       })();
     }
     return () => {
@@ -49,7 +49,7 @@ const MessagesChats: React.FunctionComponent<
     <View style={{ flex: 1 }}>
       {/* Users */}
       <CloseActivePeople />
-      <ScrollView>
+      <ScrollView style={{ flex: 1 }}>
         <Text>
           {JSON.stringify(
             { locationPermission, sensorsPermission, location },
@@ -57,6 +57,12 @@ const MessagesChats: React.FunctionComponent<
             2
           )}
         </Text>
+        <Button
+          title="Logouut"
+          onPress={async () => {
+            await mutate();
+          }}
+        />
       </ScrollView>
     </View>
   );

@@ -17,6 +17,7 @@ import * as Animatable from "react-native-animatable";
 import {
   CircularIndicator,
   CustomTextInput,
+  Footer,
   Wrapper,
 } from "../../../components";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -36,11 +37,12 @@ const avatars: Array<string> = Array(15)
 const Profile: React.FunctionComponent<AuthNavProps<"Profile">> = ({
   route,
 }) => {
-  const [nickname, setNickname] = React.useState<string>("");
+  const [nickname, setNickname] = React.useState<string>(
+    route.params.email || route.params.phoneNumber || ""
+  );
   const [error, setError] = React.useState<string>("");
   const [avatarIndex, setAvatarIndex] = React.useState<number>(0);
-  const dispatch = useDispatch();
-  const { mutate, data, isLoading, error: e } = trpc.user.profile.useMutation();
+  const { mutate, data, isLoading } = trpc.user.profile.useMutation();
   const save = async () => {
     if (nickname.trim().length < 3) {
       setError("You nickname must be at least 3 characters long.");
@@ -49,33 +51,35 @@ const Profile: React.FunctionComponent<AuthNavProps<"Profile">> = ({
     await mutate({
       avatar: avatars[avatarIndex],
       nickname: nickname.trim().toLowerCase(),
-      phoneNumber: route.params.phoneNumber,
+      phoneNumber: route.params.phoneNumber ?? "",
+      email: route.params.email ?? "",
     });
   };
 
   React.useEffect(() => {
     let mounted: boolean = true;
-    if (mounted && !!e) {
-      setError(e.message);
+    if (mounted && !!data?.error) {
+      setError(data.error.message);
     }
     return () => {
       mounted = false;
     };
-  }, [e]);
+  }, [data]);
 
   React.useEffect(() => {
     let mounted: boolean = true;
-    if (mounted && !!data?.jwt) {
+    if (mounted && !!!data?.error) {
       (async () => {
-        const { jwt, user } = data;
-        dispatch(setUser(user));
-        await store(TOKEN_KEY, jwt);
+        if (data?.jwt) {
+          const { jwt } = data;
+          await store(TOKEN_KEY, jwt);
+        }
       })();
     }
     return () => {
       mounted = false;
     };
-  }, [data, dispatch]);
+  }, [data]);
 
   return (
     <View style={{ flex: 1 }}>
@@ -282,6 +286,7 @@ const Profile: React.FunctionComponent<AuthNavProps<"Profile">> = ({
               </TouchableOpacity>
             </View>
           </Wrapper>
+          <Footer />
         </LinearGradient>
       </TouchableWithoutFeedback>
     </View>

@@ -14,41 +14,50 @@ import { COLORS, FONTS } from "../../../constants";
 import { LinearGradient } from "expo-linear-gradient";
 import { styles } from "../../../styles";
 import * as Animatable from "react-native-animatable";
-import { CircularIndicator, CustomTextInput } from "../../../components";
+import {
+  CircularIndicator,
+  CustomTextInput,
+  Footer,
+} from "../../../components";
 import { MaterialIcons } from "@expo/vector-icons";
 import { trpc } from "../../../utils/trpc";
+import { getDUID } from "../../../utils";
 const Verify: React.FunctionComponent<AuthNavProps<"Verify">> = ({
   navigation,
   route,
 }) => {
   const [code, setCode] = React.useState<string>("");
   const [error, setError] = React.useState<string>("");
-  const { mutate, isLoading, error: e, data } = trpc.user.confirm.useMutation();
+  const { mutate, isLoading, data } = trpc.user.confirm.useMutation();
   const {
     mutate: resendVCode,
     isLoading: l,
-    error: ee,
     data: d,
   } = trpc.user.resendVerificationCode.useMutation();
 
   const resendVerificationCode = async () => {
     setCode("");
     await resendVCode({
-      phoneNumber: route.params.phoneNumber,
+      phoneNumber: route.params.phoneNumber ?? "",
+      email: route.params.email ?? "",
     });
   };
   const verify = async () => {
+    const duid = await getDUID();
     await mutate({
       code,
-      phoneNumber: route.params.phoneNumber,
+      phoneNumber: route.params.phoneNumber ?? "",
+      email: route.params.email ?? "",
+      duid: duid ?? "",
     });
   };
 
   React.useEffect(() => {
     let mounted: boolean = true;
-    if (mounted && !!data) {
+    if (mounted && !!data?.user) {
       navigation.replace("Profile", {
-        phoneNumber: data.user.phoneNumber,
+        phoneNumber: data.user.phoneNumber ?? undefined,
+        email: data.user.email ?? undefined,
       });
     }
     return () => {
@@ -58,23 +67,25 @@ const Verify: React.FunctionComponent<AuthNavProps<"Verify">> = ({
 
   React.useEffect(() => {
     let mounted: boolean = true;
-    if (mounted && !!e) {
-      setError(e.message);
+    if (mounted && !!data?.error) {
+      setError(data.error.message);
     }
-    if (mounted && !!ee) {
-      setError(ee.message);
+    if (mounted && !!d?.error) {
+      setError(d.error.message);
     }
     return () => {
       mounted = false;
     };
-  }, [e, ee]);
+  }, [d, data]);
 
   React.useEffect(() => {
     let mounted: boolean = true;
     if (mounted && !!d?.user) {
       Alert.alert(
         "askme",
-        `The verification code has been re-sent to ${route.params.phoneNumber}.`,
+        `The verification code has been re-sent to ${
+          route.params.phoneNumber || route.params.email
+        }.`,
         [
           {
             text: "OK",
@@ -86,6 +97,7 @@ const Verify: React.FunctionComponent<AuthNavProps<"Verify">> = ({
           cancelable: false,
         }
       );
+      setError("");
     }
 
     return () => {
@@ -159,7 +171,7 @@ const Verify: React.FunctionComponent<AuthNavProps<"Verify">> = ({
               useNativeDriver={false}
             >
               Please enter valid verification code that has been sent to{" "}
-              {route.params.phoneNumber} via SMS.
+              {route.params.phoneNumber || route.params.email}.
             </Animatable.Text>
           </View>
 
@@ -247,6 +259,7 @@ const Verify: React.FunctionComponent<AuthNavProps<"Verify">> = ({
               ) : null}
             </TouchableOpacity>
           </KeyboardAvoidingView>
+          <Footer />
         </LinearGradient>
       </TouchableWithoutFeedback>
     </View>

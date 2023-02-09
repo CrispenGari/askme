@@ -1,11 +1,11 @@
-import { View, Text } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 import React from "react";
 
 const SettingsLanding = () => {
   return (
-    <View>
+    <ScrollView style={{ flex: 1 }}>
       <Text>SettingsLanding</Text>
-    </View>
+    </ScrollView>
   );
 };
 

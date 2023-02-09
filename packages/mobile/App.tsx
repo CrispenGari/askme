@@ -1,4 +1,5 @@
 import "react-native-gesture-handler";
+import { registerRootComponent } from "expo";
 import { LogBox, View, Text, StatusBar } from "react-native";
 import TRPCProvider from "./src/providers/TRPCProvider";
 import ReactReduxProvider from "./src/providers/ReactReduxProvider";
@@ -32,4 +33,4 @@ const App = () => {
   );
 };
 
-export default App;
+registerRootComponent(App);

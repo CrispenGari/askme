@@ -13,7 +13,9 @@ datasource db {
 model User {
   id       String  @unique @default(uuid())
 
-  phoneNumber String @unique
+  phoneNumber String? @unique
+  email String? @unique
+
   avatar   String?
   nickname String?
   bio String?

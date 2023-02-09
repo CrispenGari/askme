@@ -2,8 +2,9 @@ import { User } from "@prisma/client";
 import EventEmitter from "events";
 import jwt from "jsonwebtoken";
 import { client } from "../twilio";
+import nodemailer from "nodemailer";
 
-export const sendVerificationCode = async (
+export const sendVerificationCodeAsTxt = async (
   phoneNumber: string,
   code: string
 ) => {
@@ -15,16 +16,42 @@ export const sendVerificationCode = async (
   return msg;
 };
 
+export const sendVerificationCodeAsEmail = async (
+  email: string,
+  code: string
+) => {
+  const testAccount = await nodemailer.createTestAccount();
+  const transporter = nodemailer.createTransport({
+    host: "smtp.ethereal.email",
+    port: 587,
+    secure: false,
+    auth: {
+      user: testAccount.user,
+      pass: testAccount.pass,
+    },
+  });
+  const info = await transporter.sendMail({
+    from: '"Admin" <askme@askme.com>',
+    to: email,
+    subject: "Verify Email",
+    html: `<p>Please verify your email address the verification code is: <u><b>${code}</b></u></p>`,
+  });
+
+  console.log("Message sent: %s", info.messageId);
+  console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+};
 export const signJwt = async ({
   phoneNumber,
   id,
   nickname,
+  email,
 }: User): Promise<string> => {
   return await jwt.sign(
     {
       id,
       phoneNumber,
       nickname,
+      email,
     },
     process.env.JWT_SECRETE
   );
@@ -33,8 +60,9 @@ export const signJwt = async ({
 export const verifyJwt = async (token: string) => {
   return jwt.verify(token, process.env.JWT_SECRETE) as {
     nickname: string;
-    phoneNumber: string;
+    phoneNumber?: string;
     id: string;
+    email?: string;
   };
 };
 

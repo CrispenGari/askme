@@ -2,7 +2,7 @@ import { User } from "@askme/server";
 
 export interface StateType {
   duid: string;
-  user?: User;
+  user?: Partial<User>;
   showAppTabs: boolean;
 }
 export interface ActionType<T> {

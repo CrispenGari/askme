@@ -7,15 +7,20 @@ import {
   Keyboard,
   TouchableOpacity,
 } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import { AuthNavProps } from "../../../params";
 import { COLORS, FONTS } from "../../../constants";
 import { LinearGradient } from "expo-linear-gradient";
 import { styles } from "../../../styles";
 import * as Animatable from "react-native-animatable";
-import { CircularIndicator, CustomTextInput } from "../../../components";
+import { Entypo } from "@expo/vector-icons";
+import {
+  CircularIndicator,
+  CustomTextInput,
+  Footer,
+} from "../../../components";
 import { trpc } from "../../../utils/trpc";
-import { getDUID } from "../../../utils";
+import { getDUID, setDUID } from "../../../utils";
 const Register: React.FunctionComponent<AuthNavProps<"Register">> = ({
   navigation,
 }) => {
@@ -27,34 +32,55 @@ const Register: React.FunctionComponent<AuthNavProps<"Register">> = ({
   } = trpc.user.register.useMutation();
   const [phoneNumber, setPhoneNumber] = React.useState<string>("");
   const [code, setCode] = React.useState<string>("+27");
+  const [email, setEmail] = React.useState<string>("");
   const [error, setError] = React.useState<string>("");
+  const [usePhoneNumber, setUsePhoneNumber] = useState<boolean>(false);
 
   const register = async () => {
+    if (!!!phoneNumber && !!!email) {
+      setError("Phone number or email address is required.");
+      return;
+    }
     const _phoneNumber = phoneNumber.startsWith("0")
       ? phoneNumber.substring(1).replace(/\s/, "")
       : phoneNumber.replace(/\s/, "");
     const duid = await getDUID();
-    if (!!!duid) return;
-
-    if (_phoneNumber.length !== 9) {
-      setError("Invalid phone number");
+    if (!!!duid) {
+      console.log("No duid");
       return;
-    } else {
-      setError("");
     }
 
-    await mutate({
-      phoneNumber: code + _phoneNumber,
-      duid,
-    });
+    if (!!phoneNumber) {
+      if (_phoneNumber.length !== 9) {
+        setError("Invalid phone number");
+        return;
+      } else {
+        setError("");
+      }
+      await mutate({
+        phoneNumber: code + _phoneNumber,
+        duid,
+        email,
+      });
+    }
+    if (!!email) {
+      await mutate({
+        phoneNumber,
+        duid,
+        email: email.trim().toLocaleLowerCase(),
+      });
+    }
   };
 
   React.useEffect(() => {
     let mounted: boolean = true;
-    if (mounted && !!data) {
-      navigation.replace("Verify", {
-        phoneNumber: data.user.phoneNumber,
-      });
+    if (mounted) {
+      if (!!data?.user) {
+        navigation.replace("Verify", {
+          phoneNumber: data.user.phoneNumber ?? undefined,
+          email: data.user.email ?? undefined,
+        });
+      }
     }
     return () => {
       mounted = false;
@@ -63,13 +89,13 @@ const Register: React.FunctionComponent<AuthNavProps<"Register">> = ({
 
   React.useEffect(() => {
     let mounted: boolean = true;
-    if (mounted && !!e) {
-      setError(e.message);
+    if (mounted && !!data?.error) {
+      setError(data.error.message);
     }
     return () => {
       mounted = false;
     };
-  }, [e]);
+  }, [data]);
   return (
     <View style={{ flex: 1 }}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} style={{ flex: 1 }}>
@@ -151,26 +177,70 @@ const Register: React.FunctionComponent<AuthNavProps<"Register">> = ({
             enabled
             keyboardVerticalOffset={100}
           >
-            <CustomTextInput
-              label="Phone Number"
-              labelStyle={{
-                color: "white",
-                fontFamily: FONTS.regularBold,
-                fontSize: 20,
-                marginBottom: 5,
+            {usePhoneNumber ? (
+              <CustomTextInput
+                label="Phone Number"
+                labelStyle={{
+                  color: "white",
+                  fontFamily: FONTS.regularBold,
+                  fontSize: 20,
+                  marginBottom: 5,
+                }}
+                error={error}
+                errorStyle={[styles.p, { color: "red", marginTop: 5 }]}
+                leftIcon={<Text style={[styles.p]}>{code}</Text>}
+                keyboardType="phone-pad"
+                placeholder="phone number"
+                containerStyles={{
+                  width: "100%",
+                  maxWidth: 500,
+                }}
+                text={phoneNumber}
+                onChangeText={(text) => setPhoneNumber(text)}
+              />
+            ) : (
+              <CustomTextInput
+                label="Email Address"
+                labelStyle={{
+                  color: "white",
+                  fontFamily: FONTS.regularBold,
+                  fontSize: 20,
+                  marginBottom: 5,
+                }}
+                error={error}
+                errorStyle={[styles.p, { color: "red", marginTop: 5 }]}
+                leftIcon={<Entypo name="email" size={24} color={COLORS.main} />}
+                keyboardType="email-address"
+                placeholder="email address"
+                containerStyles={{
+                  width: "100%",
+                  maxWidth: 500,
+                }}
+                text={email}
+                onChangeText={(text) => setEmail(text)}
+              />
+            )}
+            <TouchableOpacity
+              style={{ alignSelf: "flex-end", margin: 5, marginBottom: 20 }}
+              activeOpacity={0.7}
+              onPress={() => {
+                setEmail("");
+                setPhoneNumber("");
+                setUsePhoneNumber((state) => !state);
               }}
-              error={error}
-              errorStyle={[styles.p, { color: "red", marginTop: 5 }]}
-              leftIcon={<Text style={[styles.p]}>{code}</Text>}
-              keyboardType="phone-pad"
-              placeholder="phone number"
-              containerStyles={{
-                width: "100%",
-                maxWidth: 500,
-              }}
-              text={phoneNumber}
-              onChangeText={(text) => setPhoneNumber(text)}
-            />
+            >
+              <Text
+                style={[
+                  styles.p,
+                  {
+                    color: "white",
+                    textDecorationLine: "underline",
+                  },
+                ]}
+              >
+                Or use {`${usePhoneNumber ? "email" : "phone number"}`}
+              </Text>
+            </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.7}
               onPress={register}
@@ -200,6 +270,7 @@ const Register: React.FunctionComponent<AuthNavProps<"Register">> = ({
               ) : null}
             </TouchableOpacity>
           </KeyboardAvoidingView>
+          <Footer />
         </LinearGradient>
       </TouchableWithoutFeedback>
     </View>

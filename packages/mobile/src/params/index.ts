@@ -49,10 +49,10 @@ export type SettingsStackNavProps<T extends keyof SettingsStackParamList> = {
 // ================================= Auth Stack
 
 export type AuthParamList = {
-  Verify: { phoneNumber: string };
+  Verify: Partial<{ phoneNumber: string; email: string }>;
   Register: undefined;
   Welcome: undefined;
-  Profile: { phoneNumber: string };
+  Profile: Partial<{ phoneNumber: string; email: string }>;
   TnC: undefined;
 };
 

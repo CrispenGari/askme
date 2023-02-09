@@ -1,11 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Random from "expo-random";
+
 export const setDUID = async (): Promise<boolean> => {
   try {
-    await AsyncStorage.setItem("duid", Random.getRandomBytes(10).toString());
+    await AsyncStorage.setItem("duid", Math.random().toString().slice(2));
     return true;
   } catch (error: any) {
-    console.log(error);
     return false;
   }
 };

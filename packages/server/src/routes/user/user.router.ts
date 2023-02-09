@@ -2,30 +2,70 @@ import { Events, __code__exp__, __code__prefix__ } from "../../constants";
 import {
   confirmSchema,
   onAuthStateChangeSchema,
+  onNewDeviceAuthenticationSchema,
   profileSchema,
   registerSchema,
   resendVerificationCodeSchema,
 } from "../../schema/user.schema";
+import { isValidEmail } from "@crispengari/regex-validator";
 import { publicProcedure, router } from "../../trpc/trpc";
-import { sendVerificationCode, signJwt, verifyJwt } from "../../utils";
-import * as trpc from "@trpc/server";
+import {
+  sendVerificationCodeAsTxt,
+  signJwt,
+  verifyJwt,
+  sendVerificationCodeAsEmail,
+} from "../../utils";
 import { observable } from "@trpc/server/observable";
 import { User } from "@prisma/client";
 import EventEmitter from "events";
+import { v4 as uuid_v4 } from "uuid";
 
 const ee = new EventEmitter({
   captureRejections: true,
 });
 
 export const userRouter = router({
+  onNewDeviceAuthentication: publicProcedure
+    .input(onNewDeviceAuthenticationSchema)
+    .subscription(({ input: { userId } }) => {
+      /**
+       * If someone is authenticated we will need to log them out automatically
+       * for the new device to be authenticated. This only happen when they
+       * confirm the email correctly
+       */
+      return observable<{
+        user: User | null;
+        jwt: string;
+      }>((emit) => {
+        const handleEvent = (user: User | null) => {
+          console.log({ user, userId });
+          if (!!user) {
+            if (user.id === userId) {
+              // return jwt token and user is null
+              emit.next({
+                user: null,
+                jwt: "",
+              });
+            }
+          }
+        };
+        ee.on(Events.ON_NEW_DEVICE_AUTHENTICATION, handleEvent);
+        return () => {
+          ee.off(Events.ON_NEW_DEVICE_AUTHENTICATION, handleEvent);
+        };
+      });
+    }),
   onAuthStateChange: publicProcedure
     .input(onAuthStateChangeSchema)
-    .subscription(({ input: { duid }, cxt: {} }) => {
-      return observable<User>((emit) => {
-        const handleEvent = (user: User) => {
+    .subscription(({ input: { duid } }) => {
+      return observable<{ user: User | null; jwt: string } | null>((emit) => {
+        const handleEvent = async (user: User | null) => {
           if (!!user) {
             if (user.duid === duid) {
-              emit.next(user);
+              const jwt = await signJwt(user);
+              emit.next(
+                user.isLoggedIn ? { user, jwt } : { user: null, jwt: "" }
+              );
             }
           }
         };
@@ -39,8 +79,11 @@ export const userRouter = router({
     async ({ ctx: { req, prisma } }) => {
       try {
         const jwt = req.headers?.authorization?.split(/\s/)[1];
-        const { phoneNumber } = await verifyJwt(jwt as string);
-        const user = await prisma.user.findFirst({ where: { phoneNumber } });
+        const { phoneNumber, email } = await verifyJwt(jwt as string);
+        const user = !!phoneNumber
+          ? await prisma.user.findFirst({ where: { phoneNumber } })
+          : await prisma.user.findFirst({ where: { email } });
+        ee.emit(Events.ON_AUTH_STATE_CHANGE, user);
         if (!!user) {
           return true;
         } else {
@@ -51,11 +94,32 @@ export const userRouter = router({
       }
     }
   ),
-  logout: publicProcedure.mutation(() => {
-    return {
-      user: null,
-      jwt: "",
-    };
+  logout: publicProcedure.mutation(async ({ ctx: { prisma, req } }) => {
+    try {
+      const jwt = req.headers?.authorization?.split(/\s/)[1];
+      const { id } = await verifyJwt(jwt as string);
+      const user = await prisma.user.update({
+        where: { id },
+        data: {
+          isOnline: false,
+          isLoggedIn: false,
+        },
+      });
+      ee.emit(Events.ON_AUTH_STATE_CHANGE, user);
+      return {
+        user: null,
+        jwt: "",
+      };
+    } catch (error) {
+      console.log({ error });
+      return {
+        error: {
+          field: "logout",
+          message: "Ops! Something went wrong on the server.",
+        },
+        jwt: "",
+      };
+    }
   }),
   me: publicProcedure.query(async ({ ctx: { prisma, req } }) => {
     try {
@@ -63,30 +127,153 @@ export const userRouter = router({
       const { phoneNumber } = await verifyJwt(jwt as string);
       const user = await prisma.user.findFirst({ where: { phoneNumber } });
       return {
-        me: user,
+        user,
       };
     } catch (error) {
       return {
-        me: null,
+        error: {
+          message: "Unable to find the user for whatever reason",
+          field: "me",
+        },
       };
     }
   }),
   register: publicProcedure
     .input(registerSchema)
     .mutation(
-      async ({ ctx: { redis, prisma }, input: { phoneNumber, duid } }) => {
+      async ({
+        ctx: { redis, prisma },
+        input: { phoneNumber, duid, email },
+      }) => {
         /**
          * if the user phone number is taken we:
          * - update the user
          */
         try {
           const code: string = Math.random().toString().slice(2, 8);
-          const user = await prisma.user.findFirst({
-            where: {
-              phoneNumber,
-            },
-          });
+
+          if (!!email) {
+            if (!isValidEmail(email)) {
+              return {
+                error: {
+                  message: "Invalid email address.",
+                  field: "email",
+                },
+              };
+            }
+          }
+
+          const user = !!phoneNumber
+            ? await prisma.user.findFirst({
+                where: {
+                  phoneNumber,
+                },
+              })
+            : await prisma.user.findFirst({
+                where: {
+                  email,
+                },
+              });
           const _user = !!user
+            ? !!phoneNumber
+              ? await prisma.user.update({
+                  where: {
+                    phoneNumber,
+                  },
+                  data: {
+                    isOnline: user.isOnline,
+                    isLoggedIn: user.isLoggedIn,
+                    duid: user.duid,
+                  },
+                })
+              : await prisma.user.update({
+                  where: {
+                    email,
+                  },
+                  data: {
+                    isOnline: user.isOnline,
+                    isLoggedIn: user.isLoggedIn,
+                    duid: user.duid,
+                  },
+                })
+            : !!phoneNumber
+            ? await prisma.user.create({
+                data: {
+                  phoneNumber,
+                  duid,
+                },
+              })
+            : await prisma.user.create({
+                data: {
+                  email,
+                  duid,
+                },
+              });
+          const value = JSON.stringify({
+            phoneNumber: _user.phoneNumber,
+            code,
+            email: _user.email,
+          });
+          await redis.setex(
+            __code__prefix__ + (!!phoneNumber ? phoneNumber : email),
+            __code__exp__,
+            value
+          );
+          if (phoneNumber) {
+            await sendVerificationCodeAsTxt(_user!.phoneNumber as any, code);
+          } else {
+            sendVerificationCodeAsEmail(_user!.email as any, code);
+          }
+          return {
+            user,
+            duid,
+          };
+        } catch (error) {
+          console.log(error);
+          return {
+            error: {
+              field: "server",
+              message: "Something went wrong on the server",
+            },
+          };
+        }
+      }
+    ),
+
+  resendVerificationCode: publicProcedure
+    .input(resendVerificationCodeSchema)
+    .mutation(
+      async ({ ctx: { prisma, redis }, input: { phoneNumber, email } }) => {
+        try {
+          const key: string =
+            __code__prefix__ + (!!phoneNumber ? phoneNumber : email);
+
+          await redis.del(key);
+          const code: string = Math.random().toString().slice(2, 8);
+          const user = !!phoneNumber
+            ? await prisma.user.findFirst({
+                where: {
+                  phoneNumber,
+                },
+              })
+            : await prisma.user.findFirst({
+                where: {
+                  email,
+                },
+              });
+
+          if (!!!user) {
+            return {
+              error: {
+                field: "user",
+                message: !!phoneNumber
+                  ? "Invalid phone number."
+                  : "Invalid email address.",
+              },
+            };
+          }
+
+          !!phoneNumber
             ? await prisma.user.update({
                 where: {
                   phoneNumber,
@@ -94,133 +281,144 @@ export const userRouter = router({
                 data: {
                   isOnline: false,
                   isLoggedIn: false,
-                  duid,
                 },
               })
-            : await prisma.user.create({
+            : await prisma.user.update({
+                where: {
+                  email,
+                },
                 data: {
-                  phoneNumber,
-                  duid,
+                  isOnline: false,
+                  isLoggedIn: false,
                 },
               });
           const value = JSON.stringify({
-            phoneNumber: _user.phoneNumber,
+            phoneNumber: user.phoneNumber,
             code,
+            email: user.email,
           });
-          await redis.setex(
-            __code__prefix__ + phoneNumber,
-            __code__exp__,
-            value
-          );
-          await sendVerificationCode(_user.phoneNumber, code);
-          return {
-            user: user ?? _user,
-          };
-        } catch (error) {
-          console.log(error);
-          throw new trpc.TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Something went wrong on the server.",
-          });
-        }
-      }
-    ),
-
-  resendVerificationCode: publicProcedure
-    .input(resendVerificationCodeSchema)
-    .mutation(async ({ ctx: { prisma, redis }, input: { phoneNumber } }) => {
-      try {
-        await redis.del(__code__prefix__ + phoneNumber);
-        const code: string = Math.random().toString().slice(2, 8);
-        const user = await prisma.user.findFirst({
-          where: {
-            phoneNumber,
-          },
-        });
-        if (!!!user) {
-          throw new trpc.TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Invalid phone number.",
-          });
-        }
-        await prisma.user.update({
-          where: {
-            phoneNumber,
-          },
-          data: {
-            isOnline: false,
-            isLoggedIn: false,
-          },
-        });
-        const value = JSON.stringify({ phoneNumber: user.phoneNumber, code });
-        await redis.setex(__code__prefix__ + phoneNumber, __code__exp__, value);
-        await sendVerificationCode(user.phoneNumber, code);
-        return {
-          user,
-        };
-      } catch (error) {
-        throw new trpc.TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Something went wrong on the server.",
-        });
-      }
-    }),
-  confirm: publicProcedure
-    .input(confirmSchema)
-    .mutation(
-      async ({ ctx: { prisma, redis }, input: { code, phoneNumber } }) => {
-        try {
-          const user = await prisma.user.findFirst({
-            where: {
-              phoneNumber,
-            },
-          });
-          if (!!!user) {
-            throw new trpc.TRPCError({
-              code: "FORBIDDEN",
-              message: "The phone number is invalid.",
-            });
+          await redis.setex(key, __code__exp__, value);
+          if (phoneNumber) {
+            await sendVerificationCodeAsTxt(user!.phoneNumber as any, code);
+          } else {
+            sendVerificationCodeAsEmail(user!.email as any, code);
           }
-          const value = await redis.get(__code__prefix__ + user.phoneNumber);
-
-          if (!!!value) {
-            await redis.del(__code__prefix__ + phoneNumber);
-            throw new trpc.TRPCError({
-              code: "FORBIDDEN",
-              message: "Verification code has expired.",
-            });
-          }
-          const payload = JSON.parse(value) as {
-            phoneNumber: string;
-            code: string;
-          };
-
-          if (payload.phoneNumber !== user.phoneNumber) {
-            await redis.del(__code__prefix__ + phoneNumber);
-            throw new trpc.TRPCError({
-              code: "FORBIDDEN",
-              message: "Invalid phone number.",
-            });
-          }
-
-          if (payload.code !== code) {
-            await redis.del(__code__prefix__ + phoneNumber);
-            throw new trpc.TRPCError({
-              code: "FORBIDDEN",
-              message: "Invalid verification code.",
-            });
-          }
-
-          await redis.del(__code__prefix__ + phoneNumber);
           return {
             user,
           };
         } catch (error) {
-          console.log({ error });
-          throw new trpc.TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Something went wrong on the server.",
+          console.log(error);
+          return {
+            error: {
+              field: "server",
+              message: "Something went wrong on the server.",
+            },
+          };
+        }
+      }
+    ),
+  confirm: publicProcedure
+    .input(confirmSchema)
+    .mutation(
+      async ({
+        ctx: { prisma, redis },
+        input: { code, phoneNumber, email, duid },
+      }) => {
+        try {
+          const user = !!phoneNumber
+            ? await prisma.user.findFirst({
+                where: {
+                  phoneNumber,
+                },
+              })
+            : await prisma.user.findFirst({
+                where: {
+                  email,
+                },
+              });
+          if (!!!user) {
+            return {
+              error: {
+                field: "user",
+                message: !!phoneNumber
+                  ? "Invalid phone number."
+                  : "Invalid email address.",
+              },
+            };
+          }
+
+          const key =
+            __code__prefix__ + (!!phoneNumber ? user.phoneNumber : user.email);
+          const value = await redis.get(key);
+
+          if (!!!value) {
+            await redis.del(key);
+            return {
+              error: {
+                field: "code",
+                message: "Invalid verification code, it might have expired.",
+              },
+            };
+          }
+
+          const payload = JSON.parse(value) as {
+            phoneNumber?: string;
+            code: string;
+            email?: string;
+          };
+
+          if (!!phoneNumber) {
+            if (payload.phoneNumber !== user.phoneNumber) {
+              return {
+                error: {
+                  field: "phoneNumber",
+                  message: "Invalid phone number.",
+                },
+              };
+            }
+          } else {
+            if (payload.email !== user.email) {
+              return {
+                error: {
+                  field: "email",
+                  message: "Invalid email address.",
+                },
+              };
+            }
+          }
+
+          if (payload.code !== code) {
+            return {
+              error: {
+                field: "code",
+                message: "Invalid verification code.",
+              },
+            };
+          }
+
+          const _user = await prisma.user.update({
+            where: {
+              id: user.id,
+            },
+            data: {
+              duid,
+            },
           });
+          // new device authentication
+          ee.emit(Events.ON_NEW_DEVICE_AUTHENTICATION, _user);
+
+          await redis.del(key);
+          return {
+            user: _user,
+          };
+        } catch (error) {
+          console.log({ error });
+          return {
+            error: {
+              field: "server",
+              message: "Something went wrong on the server.",
+            },
+          };
         }
       }
     ),
@@ -229,45 +427,69 @@ export const userRouter = router({
     .input(profileSchema)
     .mutation(
       async ({
-        ctx: { prisma, ee },
-        input: { nickname, phoneNumber, avatar },
+        ctx: { prisma },
+        input: { nickname, phoneNumber, avatar, email },
       }) => {
         try {
-          const user = await prisma.user.findFirst({
-            where: {
-              phoneNumber,
-            },
-          });
+          const user = !!phoneNumber
+            ? await prisma.user.findFirst({
+                where: {
+                  phoneNumber,
+                },
+              })
+            : await prisma.user.findFirst({
+                where: {
+                  email,
+                },
+              });
           if (!!!user) {
-            throw new trpc.TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message: "Invalid phone number.",
-            });
+            return {
+              error: {
+                field: "user",
+                message: phoneNumber
+                  ? "Invalid phone number."
+                  : "Invalid email address.",
+              },
+            };
           }
-          const _user = await prisma.user.update({
-            where: {
-              phoneNumber,
-            },
-            data: {
-              isOnline: true,
-              isLoggedIn: true,
-              nickname,
-              avatar,
-            },
-          });
+          const _user = !!phoneNumber
+            ? await prisma.user.update({
+                where: {
+                  phoneNumber,
+                },
+                data: {
+                  isOnline: true,
+                  isLoggedIn: true,
+                  nickname,
+                  avatar,
+                },
+              })
+            : await prisma.user.update({
+                where: {
+                  email,
+                },
+                data: {
+                  isOnline: true,
+                  isLoggedIn: true,
+                  nickname,
+                  avatar,
+                },
+              });
 
           const jwt: string = await signJwt(_user);
-
           ee.emit(Events.ON_AUTH_STATE_CHANGE, _user);
           return {
             user: _user,
             jwt,
           };
         } catch (error) {
-          throw new trpc.TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Something went wrong on the server.",
-          });
+          console.log(error);
+          return {
+            error: {
+              field: "server",
+              message: "Something went wrong on the server",
+            },
+          };
         }
       }
     ),

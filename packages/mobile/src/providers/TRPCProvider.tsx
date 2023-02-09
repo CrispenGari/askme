@@ -11,7 +11,7 @@ interface Props {
   children: React.ReactNode;
 }
 const client = createWSClient({
-  url: "ws://4a10-197-98-127-119.ngrok.io/api/trpc",
+  url: "ws://ab12-197-98-127-119.ngrok.io/api/trpc",
 });
 const TRPCProvider: React.FC<Props> = ({ children }) => {
   const links = [
@@ -20,7 +20,7 @@ const TRPCProvider: React.FC<Props> = ({ children }) => {
       condition: (op) => op.type === "subscription",
       true: wsLink<AppRouter>({ client }),
       false: httpBatchLink({
-        url: "https://4a10-197-98-127-119.ngrok.io/api/trpc",
+        url: "https://ab12-197-98-127-119.ngrok.io/api/trpc",
         headers: async () => {
           const token = (await retrieve(TOKEN_KEY)) ?? "";
           return token

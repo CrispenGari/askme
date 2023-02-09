@@ -11,6 +11,7 @@ import { useDispatch } from "react-redux";
 import { setDuid } from "../../../actions";
 import Circular from "../../../components/CircularIndicator/CircularIndicator";
 import { trpc } from "../../../utils/trpc";
+import { Footer } from "../../../components";
 const Welcome: React.FunctionComponent<AuthNavProps<"Welcome">> = ({
   navigation,
 }) => {
@@ -22,6 +23,7 @@ const Welcome: React.FunctionComponent<AuthNavProps<"Welcome">> = ({
     if (mounted) {
       (async () => {
         const duid = await getDUID();
+
         if (!!!duid) {
           const value = await setDUID();
           if (value) {
@@ -133,6 +135,7 @@ const Welcome: React.FunctionComponent<AuthNavProps<"Welcome">> = ({
             </Text>
           </TouchableOpacity>
         </View>
+        <Footer />
       </LinearGradient>
     </View>
   );
