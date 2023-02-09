@@ -3,9 +3,11 @@ import {
   confirmSchema,
   onAuthStateChangeSchema,
   onNewDeviceAuthenticationSchema,
+  onUserOnlineSchema,
   profileSchema,
   registerSchema,
   resendVerificationCodeSchema,
+  updateUserStateSchema,
 } from "../../schema/user.schema";
 import { isValidEmail } from "@crispengari/regex-validator";
 import { publicProcedure, router } from "../../trpc/trpc";
@@ -79,10 +81,8 @@ export const userRouter = router({
     async ({ ctx: { req, prisma } }) => {
       try {
         const jwt = req.headers?.authorization?.split(/\s/)[1];
-        const { phoneNumber, email } = await verifyJwt(jwt as string);
-        const user = !!phoneNumber
-          ? await prisma.user.findFirst({ where: { phoneNumber } })
-          : await prisma.user.findFirst({ where: { email } });
+        const { id } = await verifyJwt(jwt as string);
+        const user = await prisma.user.findFirst({ where: { id } });
         ee.emit(Events.ON_AUTH_STATE_CHANGE, user);
         if (!!user) {
           return true;
@@ -458,7 +458,7 @@ export const userRouter = router({
                   phoneNumber,
                 },
                 data: {
-                  isOnline: true,
+                  isOnline: false,
                   isLoggedIn: true,
                   nickname,
                   avatar,
@@ -493,4 +493,62 @@ export const userRouter = router({
         }
       }
     ),
+
+  updateUserStateAndNotify: publicProcedure
+    .input(updateUserStateSchema)
+    .mutation(async ({ ctx: { prisma, req }, input: { isOnline } }) => {
+      try {
+        const jwt = req.headers?.authorization?.split(/\s/)[1];
+        const { id } = await verifyJwt(jwt as string);
+        const user = await prisma.user.findFirst({ where: { id } });
+        if (!!!user) return false;
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            isOnline,
+          },
+        });
+        if (isOnline) {
+          ee.emit(Events.USER_ONLINE, user);
+        }
+        return true;
+      } catch (error) {
+        return false;
+      }
+    }),
+  onUserOnline: publicProcedure
+    .input(onUserOnlineSchema)
+    .subscription(({ input: { userId } }) => {
+      return observable<User | null>((emit) => {
+        const handleEvent = (user: User | null) => {
+          if (!!user) {
+            if (user.id !== userId) {
+              emit.next(user);
+            }
+          }
+        };
+        ee.on(Events.USER_ONLINE, handleEvent);
+        return () => {
+          ee.off(Events.USER_ONLINE, handleEvent);
+        };
+      });
+    }),
+  users: publicProcedure.query(async ({ ctx: { prisma, req } }) => {
+    try {
+      const jwt = req.headers?.authorization?.split(/\s/)[1];
+      const { id } = await verifyJwt(jwt as string);
+      const user = await prisma.user.findFirst({ where: { id } });
+      if (!!!user) return [];
+      const users = await prisma.user.findMany({
+        where: {
+          NOT: {
+            id,
+          },
+        },
+      });
+      return users;
+    } catch (error) {
+      return [];
+    }
+  }),
 });

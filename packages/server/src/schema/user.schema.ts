@@ -10,6 +10,10 @@ export const resendVerificationCodeSchema = z.object({
   email: z.string(),
 });
 
+export const updateUserStateSchema = z.object({
+  isOnline: z.boolean(),
+});
+
 export const confirmSchema = z.object({
   code: z.string(),
   phoneNumber: z.string(),
@@ -28,5 +32,8 @@ export const onAuthStateChangeSchema = z.object({
 });
 
 export const onNewDeviceAuthenticationSchema = z.object({
+  userId: z.string(),
+});
+export const onUserOnlineSchema = z.object({
   userId: z.string(),
 });

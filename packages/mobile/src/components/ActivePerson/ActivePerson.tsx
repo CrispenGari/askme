@@ -1,9 +1,14 @@
+import { User } from "@askme/server";
 import React from "react";
 import { TouchableOpacity, Text, View, Image, Animated } from "react-native";
 import { COLORS } from "../../constants";
 import { styles } from "../../styles";
 
-const ActivePerson = () => {
+interface Props {
+  user: User;
+  onPress?: () => void;
+}
+const ActivePerson: React.FunctionComponent<Props> = ({ user, onPress }) => {
   const indicatorAnimation = React.useRef(new Animated.Value(0)).current;
   React.useEffect(() => {
     Animated.loop(
@@ -28,23 +33,27 @@ const ActivePerson = () => {
         height: 100,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "white",
+        backgroundColor: COLORS.main,
         borderRadius: 5,
       }}
+      activeOpacity={0.7}
+      onPress={onPress}
     >
-      <Animated.View
-        style={{
-          backgroundColor: COLORS.main,
-          width: 10,
-          height: 10,
-          transform: [{ scale }],
-          position: "absolute",
-          top: 10,
-          right: 10,
-          borderRadius: 10,
-          zIndex: 10,
-        }}
-      />
+      {user.isOnline ? (
+        <Animated.View
+          style={{
+            backgroundColor: COLORS.secondary,
+            width: 10,
+            height: 10,
+            transform: [{ scale }],
+            position: "absolute",
+            top: 10,
+            right: 10,
+            borderRadius: 10,
+            zIndex: 10,
+          }}
+        />
+      ) : null}
       <Image
         style={{
           width: 60,
@@ -53,10 +62,10 @@ const ActivePerson = () => {
           resizeMode: "cover",
         }}
         source={{
-          uri: "http://t0.gstatic.com/licensed-image?q=tbn:ANd9GcR556SU3NatNpvdHLSznjYRn0T_ENfzc0PO8bxsJYqNgEko0qgAahyKGCpK7PmnIYX3O74x6jYaYX0ee50RVV0hsxlUuzc7VJs6yv52y60v",
+          uri: user.avatar as any,
         }}
       />
-      <Text style={[styles.h1]}>@crispen</Text>
+      <Text style={[styles.p, { color: "white" }]}>@{user.nickname}</Text>
     </TouchableOpacity>
   );
 };

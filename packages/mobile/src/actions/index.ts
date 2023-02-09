@@ -8,7 +8,7 @@ export const setDuid = (payload: string) => {
   };
 };
 
-export const setUser = (payload: User | null) => {
+export const setUserAction = (payload: User | null) => {
   return {
     type: constants.SET_USER,
     payload,

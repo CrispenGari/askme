@@ -4,10 +4,17 @@
     "slug": "askme",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logo.png",
+    "icon": "./assets/logo-1.png",
     "userInterfaceStyle": "light",
+    "notification": {
+      "icon": "./assets/logo-1.png",
+      "color": "#311b92",
+      "androidMode": "default",
+      "androidCollapsedTitle": "Updates from Colab.notes",
+      "iosDisplayInForeground": true
+    },
     "splash": {
-      "image": "./assets/logo.png",
+      "image": "./assets/logo-1.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -20,12 +27,12 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/logo.png",
+        "foregroundImage": "./assets/logo-1.png",
         "backgroundColor": "#FFFFFF"
       }
     },
     "web": {
-      "favicon": "./assets/logo.png"
+      "favicon": "./assets/logo-1.png"
     }
   }
 }

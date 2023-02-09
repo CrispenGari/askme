@@ -2,7 +2,8 @@ import { User } from "@askme/server";
 import { NavigationContainer } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { setUserAction } from "../actions";
 import Circular from "../components/CircularIndicator/CircularIndicator";
 import { COLORS, TOKEN_KEY } from "../constants";
 import { StateType } from "../types";
@@ -12,12 +13,14 @@ import Tabs from "./app";
 import Auth from "./auth";
 const Routes = () => {
   const { duid } = useSelector((state: StateType) => state);
+  const dispatch = useDispatch();
   const [user, setUser] = useState<User | null>(null);
   trpc.user.onAuthStateChange.useSubscription(
     { duid },
     {
       onData: async (data) => {
         await store(TOKEN_KEY, data?.jwt ?? "");
+        dispatch(setUserAction(data?.user ?? null));
         setUser(data?.user ?? null);
       },
     }
@@ -27,6 +30,7 @@ const Routes = () => {
     {
       onData: async ({ jwt, user }) => {
         await store(TOKEN_KEY, jwt);
+        dispatch(setUserAction(user));
         setUser(user);
       },
     }

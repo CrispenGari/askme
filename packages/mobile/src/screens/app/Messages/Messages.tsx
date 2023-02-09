@@ -4,7 +4,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import MessagesChats from "./stacks/MessagesChats";
 import MessagesChat from "./stacks/MessagesChat";
 import MessagesProfile from "./stacks/MessagesProfile";
-import { COLORS } from "../../../constants";
+import { COLORS, FONTS } from "../../../constants";
 
 const Stack = createStackNavigator<MessagesStackParamList>();
 const Messages: React.FunctionComponent<AppNavProps<"Messages">> = () => {
@@ -17,6 +17,13 @@ const Messages: React.FunctionComponent<AppNavProps<"Messages">> = () => {
           elevation: 0,
           shadowOpacity: 0,
           borderBottomWidth: 0,
+        },
+        title: "Chats",
+        headerTitleStyle: {
+          color: "white",
+          fontFamily: FONTS.regularBold,
+          fontSize: 25,
+          letterSpacing: 1,
         },
       }}
     >

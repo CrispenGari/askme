@@ -6,6 +6,15 @@ import ReactReduxProvider from "./src/providers/ReactReduxProvider";
 import Routes from "./src/routes/Routes";
 import { useFonts } from "expo-font";
 import { Fonts } from "./src/constants";
+import * as Notifications from "expo-notifications";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 LogBox.ignoreLogs;
 LogBox.ignoreAllLogs();
