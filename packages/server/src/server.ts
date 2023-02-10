@@ -7,7 +7,7 @@ import { appRouter } from "./routes/app.routes";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import ws from "@fastify/websocket";
-export { type User } from "@prisma/client";
+export { type User, type Chat, type Message } from "@prisma/client";
 
 _();
 

@@ -1,13 +1,30 @@
 import { TextInput, TouchableOpacity, Text, Image } from "react-native";
 import { View } from "react-native-animatable";
 import { COLORS, FONTS } from "../../constants";
-import CustomTextInput from "../CustomTextInput/CustomTextInput";
 import { Feather } from "@expo/vector-icons";
 import { useSelector } from "react-redux";
 import { StateType } from "../../types";
+import React from "react";
+import { trpc } from "../../utils/trpc";
+import { CircularIndicator } from "..";
 
-const Form = () => {
+interface Props {
+  chatId: string;
+}
+const Form: React.FunctionComponent<Props> = ({ chatId }) => {
   const { user } = useSelector((state: StateType) => state);
+  const [message, setMessage] = React.useState<string>("");
+  const { isLoading, mutate, data } = trpc.messages.sendMessage.useMutation();
+  const sendMessage = async () => {
+    if (!!!message) return;
+    if (user?.id)
+      await mutate({
+        chatId,
+        message,
+        senderId: user.id,
+      });
+    setMessage("");
+  };
   return (
     <View
       style={{
@@ -40,10 +57,23 @@ const Form = () => {
           flex: 1,
         }}
         multiline
+        keyboardType="default"
+        keyboardAppearance="default"
+        onSubmitEditing={sendMessage}
+        value={message}
+        onChangeText={(text) => setMessage(text)}
       />
-      <TouchableOpacity activeOpacity={0.7} onPress={() => {}}>
-        <Feather name="send" size={24} color="white" />
-      </TouchableOpacity>
+      {isLoading ? (
+        <CircularIndicator color={COLORS.main} size={20} />
+      ) : (
+        <TouchableOpacity
+          activeOpacity={0.7}
+          disabled={!!!message}
+          onPress={sendMessage}
+        >
+          <Feather name="send" size={24} color="white" />
+        </TouchableOpacity>
+      )}
     </View>
   );
 };

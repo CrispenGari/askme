@@ -21,6 +21,7 @@
     "@trpc/client": "^10.10.0",
     "@trpc/react-query": "^10.10.0",
     "@trpc/server": "^10.10.0",
+    "dayjs": "^1.11.7",
     "expo": "~47.0.12",
     "expo-constants": "~14.0.2",
     "expo-device": "~5.0.0",

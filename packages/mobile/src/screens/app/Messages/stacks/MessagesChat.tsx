@@ -17,23 +17,41 @@ import { useDispatch } from "react-redux";
 import { MessagesStackNavProps } from "../../../../params";
 import {
   AppBackButton,
-  CustomTextInput,
-  Form,
-  Wrapper,
+  CircularIndicator,
+  Message as MessageComponent,
 } from "../../../../components";
 import { trpc } from "../../../../utils/trpc";
 import { useLocationPermission } from "../../../../hooks";
 import { COLORS, FONTS } from "../../../../constants";
 import { styles } from "../../../../styles";
-import { SCREEN_HEIGHT } from "@gorhom/bottom-sheet";
 import { useHeaderHeight } from "@react-navigation/elements";
+import Form from "../../../../components/Form/Form";
+import { Chat, Message, User } from "@askme/server";
 
 const MessagesChat: React.FunctionComponent<
   MessagesStackNavProps<"MessagesChat">
 > = ({ navigation, route }) => {
-  const { friend } = route.params;
+  const [messages, setMessages] = useState<Array<Message & { sender: User }>>(
+    []
+  );
+
   const height = useHeaderHeight();
   const scrollViewRef = React.useRef<React.LegacyRef<ScrollView> | any>();
+  const friend: User = JSON.parse(route.params.friend);
+  const chat: Chat = JSON.parse(route.params.chat);
+  const { data, isLoading } = trpc.messages.chatMessages.useQuery({
+    chatId: chat.id,
+  });
+  trpc.messages.onNewChatMessage.useSubscription(
+    {
+      chatId: chat.id,
+    },
+    {
+      onData: (data: any) => {
+        setMessages((state) => [...state, data]);
+      },
+    }
+  );
   React.useLayoutEffect(() => {
     let mounted: boolean = true;
     if (mounted) {
@@ -99,15 +117,13 @@ const MessagesChat: React.FunctionComponent<
     };
   }, [friend]);
 
-  const { granted } = useLocationPermission();
-  const [num, setNum] = useState<any>();
-  trpc.messages.onSendMessage.useSubscription(undefined, {
-    onData(data) {
-      setNum(data);
-    },
-  });
-  const { mutate, data } = trpc.messages.sendMessage.useMutation();
-  const [message, setMessage] = useState("");
+  React.useEffect(() => {
+    let mounted: boolean = true;
+    if (mounted && !!data) setMessages(data);
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <View
@@ -134,11 +150,30 @@ const MessagesChat: React.FunctionComponent<
           }}
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}
+          scrollEnabled={true}
+          ref={scrollViewRef}
+          onContentSizeChange={() =>
+            scrollViewRef.current.scrollToEnd({ animated: true })
+          }
         >
           <Text style={[styles.p, { textAlign: "center", margin: 10 }]}>
             Your chats with {friend.nickname} are end-to-end encrypted, not even{" "}
             {"askme"} team can access your messages.
           </Text>
+          {isLoading ? (
+            <View style={{ alignItems: "center" }}>
+              <CircularIndicator color={COLORS.main} size={20} />
+            </View>
+          ) : null}
+
+          {messages.map((message) => (
+            <MessageComponent
+              key={message.id}
+              message={message}
+              me={message.userId !== friend.id}
+            />
+          ))}
+          <View style={{ height: 20 }} />
         </ScrollView>
         <KeyboardAvoidingView
           style={{
@@ -150,7 +185,7 @@ const MessagesChat: React.FunctionComponent<
           behavior="padding"
           enabled
         >
-          <Form />
+          <Form chatId={chat.id} />
         </KeyboardAvoidingView>
       </KeyboardAvoidingView>
     </View>

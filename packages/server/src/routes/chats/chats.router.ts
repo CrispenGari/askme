@@ -26,12 +26,61 @@ export const chatsRouter = router({
               field: "friend",
             },
           };
-        const chat = await prisma.chat.create({
-          data: {
-            users: { create: [{ userId: me.id }, { userId: friend.id }] },
+
+        const chatId: string = [me.id, friend.id]
+          .sort((a, b) => a.localeCompare(b))
+          .join("@");
+
+        const chat = await prisma.chat.findFirst({
+          where: {
+            userToUserChatId: chatId,
+          },
+          include: {
+            users: {
+              select: {
+                user: true,
+              },
+            },
+            messages: true,
           },
         });
-        return chat;
+        if (!!chat) return { chat };
+        const _chat = await prisma.chat.create({
+          data: {
+            userToUserChatId: chatId,
+            users: {
+              create: [
+                {
+                  user: {
+                    connect: {
+                      id: me.id,
+                    },
+                  },
+                },
+                {
+                  user: {
+                    connect: {
+                      id: friend.id,
+                    },
+                  },
+                },
+              ],
+            },
+          },
+          include: {
+            users: {
+              select: {
+                user: true,
+              },
+            },
+            messages: {
+              select: {
+                sender: true,
+              },
+            },
+          },
+        });
+        return { chat: _chat };
       } catch (error) {
         return {
           error: {

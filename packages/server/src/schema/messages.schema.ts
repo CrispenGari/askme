@@ -3,17 +3,14 @@ import { z } from "zod";
 
 export const sendMessageSchema = z.object({
   message: z.string(),
-  sender: z.string(),
+  senderId: z.string(),
+  chatId: z.string(),
 });
 
-const messageSchema = z.object({
-  id: z.string(),
-  message: z.string(),
-
-  sentAt: z.date(),
-  sender: z.string(),
+export const chatMessagesSchema = z.object({
+  chatId: z.string(),
 });
 
-export type Message = z.TypeOf<typeof messageSchema>;
-
-export const messageSubSchema = z.object({});
+export const onNewMessageSchema = z.object({
+  chatId: z.string(),
+});
