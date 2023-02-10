@@ -17,6 +17,7 @@ const Messages: React.FunctionComponent<AppNavProps<"Messages">> = () => {
           elevation: 0,
           shadowOpacity: 0,
           borderBottomWidth: 0,
+          height: 100,
         },
         title: "Chats",
         headerTitleStyle: {

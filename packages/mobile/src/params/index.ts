@@ -1,3 +1,4 @@
+import { User } from "@askme/server";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -17,7 +18,9 @@ export type AppNavProps<T extends keyof AppParamList> = {
 // Messages Stacks Param List
 export type MessagesStackParamList = {
   MessagesChats: undefined;
-  MessagesChat: undefined;
+  MessagesChat: {
+    friend: User;
+  };
   MessagesProfile: undefined;
 };
 

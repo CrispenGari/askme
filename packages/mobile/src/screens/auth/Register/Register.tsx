@@ -179,6 +179,7 @@ const Register: React.FunctionComponent<AuthNavProps<"Register">> = ({
           >
             {usePhoneNumber ? (
               <CustomTextInput
+                // wrapperStyles={{ width: "100%", marginHorizontal: 10 }}
                 label="Phone Number"
                 labelStyle={{
                   color: "white",

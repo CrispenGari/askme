@@ -48,21 +48,7 @@ const MessagesChats: React.FunctionComponent<
     <View style={{ flex: 1 }}>
       {/* Users */}
       <ScrollView style={{ flex: 1 }} bounces={false}>
-        <CloseActivePeople />
-        <Text>
-          {JSON.stringify(
-            { locationPermission, sensorsPermission, location },
-            null,
-            2
-          )}
-        </Text>
-        <Button
-          title="Logouut"
-          onPress={async () => {
-            await sendPushNotification(token, "askme", "user is online");
-            console.log({ token });
-          }}
-        />
+        <CloseActivePeople navigation={navigation} />
       </ScrollView>
     </View>
   );

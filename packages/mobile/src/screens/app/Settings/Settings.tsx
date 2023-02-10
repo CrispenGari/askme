@@ -12,6 +12,7 @@ const Settings: React.FunctionComponent<AppNavProps<"Settings">> = () => {
       screenOptions={{
         headerStyle: {
           backgroundColor: COLORS.main,
+          height: 100,
           elevation: 0,
           shadowOpacity: 0,
           borderBottomWidth: 0,

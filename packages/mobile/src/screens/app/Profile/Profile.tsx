@@ -15,6 +15,7 @@ const Profile: React.FunctionComponent<AppNavProps<"Profile">> = () => {
           elevation: 0,
           shadowOpacity: 0,
           borderBottomWidth: 0,
+          height: 100,
         },
       }}
     >
