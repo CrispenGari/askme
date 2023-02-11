@@ -10,6 +10,7 @@ import updateLocal from "dayjs/plugin/updateLocale";
 import { CircularIndicator, CustomTextInput } from "..";
 import { MaterialIcons } from "@expo/vector-icons";
 import { trpc } from "../../utils/trpc";
+import { User } from "@askme/server";
 dayjs.extend(relativeTime);
 dayjs.extend(updateLocal);
 
@@ -17,8 +18,14 @@ dayjs.updateLocale("en", {
   relativeTime: relativeTimeObject,
 });
 
-const ProfileDetails = () => {
-  const { user } = useSelector((state: StateType) => state);
+interface Props {
+  user: Partial<User> | undefined;
+  allowEdit: boolean;
+}
+const ProfileDetails: React.FunctionComponent<Props> = ({
+  user,
+  allowEdit,
+}) => {
   const [modalVisible, setModalVisible] = React.useState(false);
   const [bio, setBio] = React.useState(user?.bio ?? "");
   const [nickname, setNickname] = React.useState(user?.nickname ?? "");
@@ -178,21 +185,22 @@ const ProfileDetails = () => {
       <Text style={[styles.p, { color: "gray" }]}>
         Joined: {dayjs(user?.createdAt).fromNow()} ago
       </Text>
-
-      <TouchableOpacity
-        activeOpacity={0.7}
-        style={{ alignSelf: "flex-start" }}
-        onPress={() => setModalVisible(true)}
-      >
-        <Text
-          style={[
-            styles.p,
-            { fontSize: 20, marginTop: 10, color: COLORS.main },
-          ]}
+      {allowEdit ? (
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={{ alignSelf: "flex-start" }}
+          onPress={() => setModalVisible(true)}
         >
-          Edit details
-        </Text>
-      </TouchableOpacity>
+          <Text
+            style={[
+              styles.p,
+              { fontSize: 20, marginTop: 10, color: COLORS.main },
+            ]}
+          >
+            Edit details
+          </Text>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 };

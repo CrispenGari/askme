@@ -21,7 +21,9 @@ export type MessagesStackParamList = {
     friend: string;
     chat: string;
   };
-  MessagesProfile: undefined;
+  MessagesProfile: {
+    user: string;
+  };
 };
 
 export type MessagesStackNavProps<T extends keyof MessagesStackParamList> = {

@@ -71,6 +71,11 @@ const MessagesChat: React.FunctionComponent<
                 justifyContent: "center",
                 alignItems: "center",
               }}
+              onPress={() => {
+                navigation.navigate("MessagesProfile", {
+                  user: JSON.stringify(friend),
+                });
+              }}
             >
               <Text style={[styles.p, { color: "white", fontSize: 20 }]}>
                 {friend.nickname ||
@@ -94,7 +99,15 @@ const MessagesChat: React.FunctionComponent<
         },
         headerRight: (props) => {
           return (
-            <TouchableOpacity activeOpacity={0.7} style={{ marginRight: 10 }}>
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate("MessagesProfile", {
+                  user: JSON.stringify(friend),
+                });
+              }}
+              activeOpacity={0.7}
+              style={{ marginRight: 10 }}
+            >
               <Image
                 source={{
                   uri: friend.avatar ?? "",

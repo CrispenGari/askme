@@ -13,6 +13,7 @@ import { COLORS } from "../../constants";
 import { styles } from "../../styles";
 import { CircularIndicator } from "..";
 import { trpc } from "../../utils/trpc";
+import { User } from "@askme/server";
 const avatars: Array<string> = Array(20)
   .fill(null)
   .map(
@@ -22,10 +23,14 @@ const avatars: Array<string> = Array(20)
         .slice(2, 8)}.png`
   );
 
-const ProfileAvatar = () => {
-  const { user } = useSelector((state: StateType) => state);
+interface Props {
+  user: Partial<User> | undefined;
+  allowEdit: boolean;
+}
+const ProfileAvatar: React.FunctionComponent<Props> = ({ user, allowEdit }) => {
   const [modalVisible, setModalVisible] = React.useState(false);
   const [avatarIndex, setAvatarIndex] = React.useState<number>(0);
+  const { user: me } = useSelector((state: StateType) => state);
 
   const { mutate, isLoading, data } = trpc.user.updateAvatar.useMutation();
   const updateAvatar = async () => {
@@ -168,7 +173,7 @@ const ProfileAvatar = () => {
         </View>
       </Modal>
       <Text style={[styles.h1, { fontSize: 25, marginBottom: 10 }]}>
-        Your Avatar
+        {me?.id === user?.id ? "Your Avatar" : `${user?.nickname}'s Avatar`}
       </Text>
       <Image
         source={{ uri: user?.avatar ?? "" }}
@@ -179,19 +184,21 @@ const ProfileAvatar = () => {
           backgroundColor: COLORS.main,
         }}
       />
-      <TouchableOpacity
-        activeOpacity={0.7}
-        onPress={() => setModalVisible(true)}
-      >
-        <Text
-          style={[
-            styles.p,
-            { fontSize: 20, marginTop: 10, color: COLORS.main },
-          ]}
+      {allowEdit ? (
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => setModalVisible(true)}
         >
-          Change Avatar
-        </Text>
-      </TouchableOpacity>
+          <Text
+            style={[
+              styles.p,
+              { fontSize: 20, marginTop: 10, color: COLORS.main },
+            ]}
+          >
+            Change Avatar
+          </Text>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 };

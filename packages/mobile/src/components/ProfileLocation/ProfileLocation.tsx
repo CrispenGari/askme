@@ -11,6 +11,7 @@ import updateLocal from "dayjs/plugin/updateLocale";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { CircularIndicator } from "..";
+import { User } from "@askme/server";
 
 dayjs.extend(relativeTime);
 dayjs.extend(updateLocal);
@@ -18,14 +19,16 @@ dayjs.extend(updateLocal);
 dayjs.updateLocale("en", {
   relativeTime: relativeTimeObject,
 });
-const ProfileLocation = () => {
+
+interface Props {
+  user: Partial<User> | undefined;
+}
+const ProfileLocation: React.FunctionComponent<Props> = ({ user }) => {
   const { granted } = useLocationPermission();
+  const { user: me } = useSelector((state: StateType) => state);
   const [location, setLocation] = useState<Location.LocationObject>();
   const [currentReversedLocation, setCurrentReversedLocation] =
     useState<Location.LocationGeocodedAddress>();
-  const { user } = useSelector((state: StateType) => state);
-  const [loading, setLoading] = useState(false);
-
   useEffect(() => {
     let mounted: boolean = true;
     if (mounted && granted) {
@@ -44,7 +47,6 @@ const ProfileLocation = () => {
     if (mounted)
       (async () => {
         if (granted && mounted && location) {
-          setLoading(true);
           const reversed = await Location.reverseGeocodeAsync({
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
@@ -57,17 +59,6 @@ const ProfileLocation = () => {
     };
   }, [location, granted]);
 
-  React.useEffect(() => {
-    let mounted: boolean = true;
-    if (mounted && currentReversedLocation) {
-      setLoading(false);
-    }
-    return () => {
-      mounted = false;
-    };
-  }, [currentReversedLocation]);
-  console.log(currentReversedLocation);
-
   return (
     <View
       style={{
@@ -78,7 +69,7 @@ const ProfileLocation = () => {
       }}
     >
       <Text style={[styles.h1, { fontSize: 25, marginBottom: 10 }]}>
-        Your Space
+        {me?.id === user?.id ? "Your Space" : `${user?.nickname}'s Space`}
       </Text>
       {!!location ? (
         <MapView
