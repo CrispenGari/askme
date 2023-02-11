@@ -2,7 +2,6 @@ import {
   View,
   Text,
   Image,
-  KeyboardAvoidingView,
   TouchableWithoutFeedback,
   Keyboard,
   TouchableOpacity,
@@ -23,8 +22,7 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { trpc } from "../../../utils/trpc";
 import { store } from "../../../utils";
-import { useDispatch } from "react-redux";
-import { setUser } from "../../../actions";
+
 const avatars: Array<string> = Array(15)
   .fill(null)
   .map(

@@ -1,49 +1,45 @@
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { View, ScrollView } from "react-native";
 import React from "react";
 import { ProfileStackNavProps } from "../../../../params";
-import { isLoading } from "expo-font";
-import { CircularIndicator } from "../../../../components";
-import { COLORS } from "../../../../constants";
-import { styles } from "../../../../styles";
-import { trpc } from "../../../../utils/trpc";
+import { COLORS, FONTS } from "../../../../constants";
+import { useSelector } from "react-redux";
+import { StateType } from "../../../../types";
+import ProfileAvatar from "../../../../components/ProfileAvatar/ProfileAvatar";
+import ProfileDetails from "../../../../components/ProfileDetails/ProfileDetails";
+import ProfileLocation from "../../../../components/ProfileLocation/ProfileLocation";
+import ProfileLogout from "../../../../components/ProfileLogout/ProfileLogout";
 
 const ProfileLanding: React.FunctionComponent<
   ProfileStackNavProps<"ProfileLanding">
-> = ({ route, navigation }) => {
-  const { isLoading, data, mutate } = trpc.user.logout.useMutation();
+> = ({ navigation }) => {
+  const { user } = useSelector((state: StateType) => state);
 
-  const signOut = async () => {
-    await mutate();
-  };
+  React.useLayoutEffect(() => {
+    let mounted: boolean = true;
+    if (mounted) {
+      navigation.setOptions({
+        headerTitle: `@${user?.nickname}` ?? "profile",
+        headerTitleStyle: {
+          color: "white",
+          fontFamily: FONTS.regularBold,
+          fontSize: 25,
+          letterSpacing: 1,
+        },
+      });
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
-    <ScrollView style={{ flex: 1 }}>
-      <TouchableOpacity
-        activeOpacity={0.7}
-        onPress={signOut}
-        disabled={isLoading}
-        style={[
-          styles.button,
-          {
-            width: "100%",
-            alignSelf: "flex-start",
-            marginTop: 30,
-            marginBottom: 0,
-            justifyContent: "center",
-            flexDirection: "row",
-          },
-        ]}
-      >
-        <Text
-          style={[
-            styles.button__text,
-            { fontSize: 20, marginRight: isLoading ? 10 : 0 },
-          ]}
-        >
-          Logout
-        </Text>
-        {isLoading ? <CircularIndicator color={COLORS.main} size={20} /> : null}
-      </TouchableOpacity>
+    <ScrollView style={{ flex: 1, backgroundColor: COLORS.tertiary }}>
+      <ProfileAvatar />
+      <ProfileDetails />
+      <ProfileLocation />
+      <ProfileLogout />
+      <View style={{ height: 50 }} />
     </ScrollView>
   );
 };

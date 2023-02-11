@@ -6,14 +6,85 @@ import {
   sendMessageSchema,
   onNewMessageSchema,
   chatMessagesSchema,
+  onNewChatMessageSchema,
+  markMessageAsReadSchema,
+  onMarkAsReadSchema,
 } from "../../schema/messages.schema";
 import EventEmitter from "events";
 import { verifyJwt } from "../../utils";
-import { Message } from "@prisma/client";
+import { ChatsOnUsers, Message, User } from "@prisma/client";
+
+type MessageType = Message & {
+  chat: {
+    messages: {
+      message: string;
+      id: string;
+      createdAt: Date;
+      updatedAt: Date;
+      userId: string;
+      chatId: string;
+      sender: User;
+      read: boolean;
+    }[];
+    id: string;
+    chatName: string;
+    createdAt: Date;
+    updatedAt: Date;
+    userToUserChatId: string;
+    users: (ChatsOnUsers & {
+      user: User;
+    })[];
+  };
+  sender: User;
+};
 const ee = new EventEmitter({
   captureRejections: true,
 });
 export const messagesRouter = router({
+  markMessageAsRead: publicProcedure
+    .input(markMessageAsReadSchema)
+    .query(async ({ input: { messageId, senderId }, ctx: { req, prisma } }) => {
+      try {
+        const jwt = req.headers?.authorization?.split(/\s/)[1];
+        const { id } = await verifyJwt(jwt as string);
+        const user = await prisma.user.findFirst({ where: { id } });
+        const msg = await prisma.message.findFirst({
+          where: {
+            id: messageId,
+            AND: {
+              userId: senderId,
+            },
+          },
+        });
+        if (!!!user || !!!msg)
+          return {
+            error: {
+              field: "user|message",
+              message: "failed query message and user.",
+            },
+          };
+        const message = await prisma.message.update({
+          where: {
+            id: messageId,
+          },
+          data: {
+            read: true,
+          },
+          include: {
+            sender: true,
+          },
+        });
+        ee.emit(Events.ON_MARK_AS_READ, message);
+        return { message };
+      } catch (error) {
+        return {
+          error: {
+            field: "server",
+            message: "something went wrong on the server.",
+          },
+        };
+      }
+    }),
   chatMessages: publicProcedure
     .input(chatMessagesSchema)
     .query(async ({ input: { chatId }, ctx: { req, prisma } }) => {
@@ -94,14 +165,48 @@ export const messagesRouter = router({
           },
           include: {
             sender: true,
+            chat: {
+              select: {
+                chatName: true,
+                createdAt: true,
+                messages: {
+                  select: {
+                    sender: true,
+                    createdAt: true,
+                    updatedAt: true,
+                    read: true,
+                    message: true,
+                    id: true,
+                    chatId: true,
+                    userId: true,
+                  },
+                  take: 1,
+                  orderBy: {
+                    createdAt: "desc",
+                  },
+                },
+                updatedAt: true,
+                userToUserChatId: true,
+                users: {
+                  include: {
+                    user: true,
+                  },
+                },
+                id: true,
+              },
+            },
           },
         });
-        if (_msg) ee.emit(Events.ON_NEW_MESSAGE, _msg);
+        if (_msg) {
+          ee.emit(Events.ON_NEW_CHAT_MESSAGE, _msg);
+          ee.emit(Events.ON_NEW_MESSAGE, _msg);
+        }
+
         return msg;
       }
     ),
   onNewChatMessage: publicProcedure
-    .input(onNewMessageSchema)
+    .input(onNewChatMessageSchema)
     .subscription(async ({ input: { chatId } }) => {
       return observable<Message>((emit) => {
         const onMessage = (msg: Message) => {
@@ -109,9 +214,51 @@ export const messagesRouter = router({
             emit.next(msg);
           }
         };
-        ee.on(Events.ON_NEW_MESSAGE, onMessage);
+        ee.on(Events.ON_NEW_CHAT_MESSAGE, onMessage);
         return () => {
-          ee.off(Events.ON_NEW_MESSAGE, onMessage);
+          ee.off(Events.ON_NEW_CHAT_MESSAGE, onMessage);
+        };
+      });
+    }),
+
+  onNewMessage: publicProcedure
+    .input(onNewMessageSchema)
+    .subscription(async ({ input: { uid } }) => {
+      return observable<MessageType>((emit) => {
+        const handler = (msg: MessageType) => {
+          const me = msg.chat.users
+            .map((u) => u.user)
+            .find((u) => u.id === uid);
+          if (!!me) {
+            emit.next(msg);
+          }
+        };
+        ee.on(Events.ON_NEW_MESSAGE, handler);
+        return () => {
+          ee.off(Events.ON_NEW_MESSAGE, handler);
+        };
+      });
+    }),
+  onMarkAsRead: publicProcedure
+    .input(onMarkAsReadSchema)
+    .subscription(async ({ input: { uid } }) => {
+      return observable<
+        Message & {
+          sender: User;
+        }
+      >((emit) => {
+        const handler = (
+          msg: Message & {
+            sender: User;
+          }
+        ) => {
+          if (msg.sender.id === uid) {
+            emit.next(msg);
+          }
+        };
+        ee.on(Events.ON_MARK_AS_READ, handler);
+        return () => {
+          ee.off(Events.ON_MARK_AS_READ, handler);
         };
       });
     }),

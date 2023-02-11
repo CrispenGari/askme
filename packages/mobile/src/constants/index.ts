@@ -1,6 +1,6 @@
 import { Dimensions } from "react-native";
 
-export const severDomain: string = `8dd7-197-98-127-119.ngrok.io`;
+export const severDomain: string = `d178-197-98-127-119.ngrok.io`;
 
 export const relativeTimeObject = {
   future: "in %s",

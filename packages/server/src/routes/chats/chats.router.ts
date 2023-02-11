@@ -111,8 +111,40 @@ export const chatsRouter = router({
             },
           },
         },
+        orderBy: {
+          updatedAt: "desc",
+        },
+        include: {
+          messages: {
+            select: {
+              sender: true,
+              createdAt: true,
+              updatedAt: true,
+              read: true,
+              message: true,
+              id: true,
+              chatId: true,
+              userId: true,
+            },
+            take: 1,
+            orderBy: {
+              createdAt: "desc",
+            },
+          },
+          users: {
+            select: {
+              user: true,
+            },
+            where: {
+              NOT: {
+                userId: me.id,
+              },
+            },
+          },
+        },
       });
-      return chats;
+
+      return { chats };
     } catch (error) {
       return {
         error: {

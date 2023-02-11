@@ -35,6 +35,11 @@ const Routes = () => {
       },
     }
   );
+  trpc.user.onProfileDetailsUpdate.useSubscription(undefined, {
+    onData: (data) => {
+      dispatch(setUserAction(data.user));
+    },
+  });
   // const dispatch = useDispatch();
   const { isLoading, data, mutate } = trpc.user.fetchUserOrFail.useMutation();
   React.useEffect(() => {

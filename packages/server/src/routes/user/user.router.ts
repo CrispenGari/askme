@@ -7,6 +7,8 @@ import {
   profileSchema,
   registerSchema,
   resendVerificationCodeSchema,
+  updateAvatarSchema,
+  updatePublicDetailsSchema,
   updateUserStateSchema,
 } from "../../schema/user.schema";
 import { isValidEmail } from "@crispengari/regex-validator";
@@ -20,13 +22,96 @@ import {
 import { observable } from "@trpc/server/observable";
 import { User } from "@prisma/client";
 import EventEmitter from "events";
-import { v4 as uuid_v4 } from "uuid";
 
 const ee = new EventEmitter({
   captureRejections: true,
 });
 
 export const userRouter = router({
+  updatePublicDetails: publicProcedure
+    .input(updatePublicDetailsSchema)
+    .mutation(async ({ ctx: { prisma, req }, input: { bio, nickname } }) => {
+      try {
+        const jwt = req.headers?.authorization?.split(/\s/)[1];
+        const { id } = await verifyJwt(jwt as string);
+        const me = await prisma.user.findFirst({ where: { id } });
+        if (!!!me)
+          return {
+            error: {
+              message: "Unable to find the user for whatever reason",
+              field: "me",
+            },
+          };
+
+        const user = await prisma.user.update({
+          where: { id },
+          data: {
+            bio,
+            nickname,
+          },
+        });
+        ee.emit(Events.ON_PROFILE_DETAILS_UPDATE, user);
+        return {
+          user,
+        };
+      } catch (error) {
+        return {
+          error: {
+            message: "Unable to find the user for whatever reason",
+            field: "me",
+          },
+        };
+      }
+    }),
+  updateAvatar: publicProcedure
+    .input(updateAvatarSchema)
+    .mutation(async ({ ctx: { prisma, req }, input: { avatar } }) => {
+      try {
+        const jwt = req.headers?.authorization?.split(/\s/)[1];
+        const { id } = await verifyJwt(jwt as string);
+        const me = await prisma.user.findFirst({ where: { id } });
+        if (!!!me)
+          return {
+            error: {
+              message: "Unable to find the user for whatever reason",
+              field: "me",
+            },
+          };
+
+        const user = await prisma.user.update({
+          where: { id },
+          data: {
+            avatar,
+          },
+        });
+        ee.emit(Events.ON_PROFILE_DETAILS_UPDATE, user);
+        return {
+          user,
+        };
+      } catch (error) {
+        return {
+          error: {
+            message: "Unable to find the user for whatever reason",
+            field: "me",
+          },
+        };
+      }
+    }),
+  onProfileDetailsUpdate: publicProcedure.subscription(() => {
+    return observable<{
+      user: User;
+    }>((emit) => {
+      const handleEvent = (user: User) => {
+        emit.next({
+          user,
+        });
+      };
+      ee.on(Events.ON_PROFILE_DETAILS_UPDATE, handleEvent);
+      return () => {
+        ee.off(Events.ON_PROFILE_DETAILS_UPDATE, handleEvent);
+      };
+    });
+  }),
   onNewDeviceAuthentication: publicProcedure
     .input(onNewDeviceAuthenticationSchema)
     .subscription(({ input: { userId } }) => {
@@ -124,8 +209,8 @@ export const userRouter = router({
   me: publicProcedure.query(async ({ ctx: { prisma, req } }) => {
     try {
       const jwt = req.headers?.authorization?.split(/\s/)[1];
-      const { phoneNumber } = await verifyJwt(jwt as string);
-      const user = await prisma.user.findFirst({ where: { phoneNumber } });
+      const { id } = await verifyJwt(jwt as string);
+      const user = await prisma.user.findFirst({ where: { id } });
       return {
         user,
       };
@@ -478,6 +563,7 @@ export const userRouter = router({
 
           const jwt: string = await signJwt(_user);
           ee.emit(Events.ON_AUTH_STATE_CHANGE, _user);
+          ee.emit(Events.ON_NEW_USER_JOINED, _user);
           return {
             user: _user,
             jwt,
@@ -533,6 +619,18 @@ export const userRouter = router({
         };
       });
     }),
+
+  onNewUserJoined: publicProcedure.subscription(() => {
+    return observable<User>((emit) => {
+      const handleEvent = (user: User) => {
+        emit.next(user);
+      };
+      ee.on(Events.ON_NEW_USER_JOINED, handleEvent);
+      return () => {
+        ee.off(Events.ON_NEW_USER_JOINED, handleEvent);
+      };
+    });
+  }),
   users: publicProcedure.query(async ({ ctx: { prisma, req } }) => {
     try {
       const jwt = req.headers?.authorization?.split(/\s/)[1];
@@ -544,6 +642,9 @@ export const userRouter = router({
           NOT: {
             id,
           },
+        },
+        orderBy: {
+          isOnline: "desc",
         },
       });
       return users;

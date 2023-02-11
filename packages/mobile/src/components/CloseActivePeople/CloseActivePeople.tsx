@@ -16,9 +16,19 @@ interface Props {
   >;
 }
 const CloseActivePeople: React.FunctionComponent<Props> = ({ navigation }) => {
+  const [closeActivePeople, setCloseActivePeople] = React.useState<Array<User>>(
+    []
+  );
   const { data, isLoading } = trpc.user.users.useQuery();
+
   const { mutate, data: chat } = trpc.chats.initializeChat.useMutation({});
   const [friend, setFriend] = React.useState<User | undefined>();
+
+  trpc.user.onNewUserJoined.useSubscription(undefined, {
+    onData: (data) => {
+      setCloseActivePeople((state) => [data, ...state]);
+    },
+  });
 
   React.useEffect(() => {
     let mounted: boolean = true;
@@ -32,18 +42,25 @@ const CloseActivePeople: React.FunctionComponent<Props> = ({ navigation }) => {
       mounted = false;
     };
   }, [chat, navigation, friend]);
-
-  console.log({ chat, friend });
+  React.useEffect(() => {
+    let mounted: boolean = true;
+    if (mounted && !!data) {
+      setCloseActivePeople(data);
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [data]);
 
   return (
-    <View style={{ padding: 10, backgroundColor: COLORS.tertiary }}>
+    <View style={{ padding: 10, backgroundColor: COLORS.secondary }}>
       <Text style={[styles.h1, { fontSize: 20 }]}>People in your Space</Text>
       <ScrollView
         style={{ width: "100%", paddingVertical: 5 }}
         horizontal
         showsHorizontalScrollIndicator={false}
       >
-        {data?.map((user) => (
+        {closeActivePeople.map((user) => (
           <ActivePerson
             key={user.id}
             user={user}

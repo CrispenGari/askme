@@ -10,6 +10,15 @@ export const resendVerificationCodeSchema = z.object({
   email: z.string(),
 });
 
+export const updatePublicDetailsSchema = z.object({
+  nickname: z.string(),
+  bio: z.string().nullable(),
+});
+
+export const updateAvatarSchema = z.object({
+  avatar: z.string(),
+});
+
 export const updateUserStateSchema = z.object({
   isOnline: z.boolean(),
 });

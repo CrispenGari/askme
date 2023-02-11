@@ -21,7 +21,6 @@ import {
   Message as MessageComponent,
 } from "../../../../components";
 import { trpc } from "../../../../utils/trpc";
-import { useLocationPermission } from "../../../../hooks";
 import { COLORS, FONTS } from "../../../../constants";
 import { styles } from "../../../../styles";
 import { useHeaderHeight } from "@react-navigation/elements";
@@ -123,7 +122,7 @@ const MessagesChat: React.FunctionComponent<
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [data]);
 
   return (
     <View
