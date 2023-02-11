@@ -4,6 +4,54 @@ import { publicProcedure, router } from "../../trpc/trpc";
 import { verifyJwt } from "../../utils";
 
 export const chatsRouter = router({
+  countUnOpenedChats: publicProcedure.query(
+    async ({ ctx: { prisma, req } }) => {
+      try {
+        const jwt = req.headers?.authorization?.split(/\s/)[1];
+        const { id } = await verifyJwt(jwt as string);
+        const me = await prisma.user.findFirst({ where: { id } });
+        if (!!!me)
+          return {
+            error: {
+              message: "Unauthorized",
+              field: "user",
+            },
+          };
+        const chats = await prisma.chat.findMany({
+          where: {
+            users: {
+              some: {
+                userId: me.id,
+              },
+            },
+          },
+          orderBy: {
+            updatedAt: "desc",
+          },
+          include: {
+            messages: {
+              select: {
+                read: true,
+              },
+              where: {
+                read: false,
+              },
+            },
+          },
+        });
+        const _ch = chats.flatMap((chat) => chat.messages);
+        return { chats: _ch.length };
+      } catch (error) {
+        return {
+          error: {
+            message: "Unable to start a new chat, server error.",
+            field: "server",
+          },
+        };
+      }
+    }
+  ),
+
   initializeChat: publicProcedure
     .input(initializeChatSchema)
     .mutation(async ({ ctx: { prisma, req }, input: { friendId } }) => {

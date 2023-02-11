@@ -26,7 +26,12 @@ const CloseActivePeople: React.FunctionComponent<Props> = ({ navigation }) => {
 
   trpc.user.onNewUserJoined.useSubscription(undefined, {
     onData: (data) => {
-      setCloseActivePeople((state) => [data, ...state]);
+      setCloseActivePeople((state) =>
+        [data, ...state].filter(
+          (person, index, self) =>
+            index === self.findIndex((t) => t.id === person.id)
+        )
+      );
     },
   });
 

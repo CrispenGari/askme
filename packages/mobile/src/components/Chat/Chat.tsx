@@ -1,11 +1,13 @@
 import { View, Text, TouchableOpacity, Image } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import { Chat, Message, User } from "@askme/server";
 import { COLORS, relativeTimeObject } from "../../constants";
 import { styles } from "../../styles";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import updateLocal from "dayjs/plugin/updateLocale";
+import { trpc } from "../../utils/trpc";
+import { Ionicons } from "@expo/vector-icons";
 
 dayjs.extend(relativeTime);
 dayjs.extend(updateLocal);
@@ -21,9 +23,22 @@ interface Props {
   onPress?: () => void;
 }
 const ChatComponent: React.FunctionComponent<Props> = ({
-  chat: { friend, lastMessage },
+  chat: { friend, lastMessage, ...chat },
   onPress,
 }) => {
+  const [unReadMessages, setUnReadMessages] = useState<number>(0);
+  const { data } = trpc.messages.countUnOpenedMessages.useQuery({
+    chatId: chat.id,
+  });
+  React.useEffect(() => {
+    let mounted: boolean = true;
+    if (mounted && !!data?.chats) {
+      setUnReadMessages(data.chats);
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [data]);
   return (
     <TouchableOpacity
       style={{
@@ -48,25 +63,34 @@ const ChatComponent: React.FunctionComponent<Props> = ({
       />
       <View style={{ flex: 1, marginHorizontal: 4 }}>
         <Text style={[styles.h1]}>{friend.nickname}</Text>
-        <Text style={[styles.p]} numberOfLines={1}>
-          {lastMessage?.message}
-        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Ionicons
+            name="checkmark-done-outline"
+            size={16}
+            color={lastMessage.read ? COLORS.blue : "gray"}
+          />
+          <Text style={[styles.p, { marginLeft: 4 }]} numberOfLines={1}>
+            {lastMessage?.message}
+          </Text>
+        </View>
       </View>
       <View style={{}}>
-        <View
-          style={{
-            width: 20,
-            height: 20,
-            backgroundColor: COLORS.tertiary,
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: 20,
-            marginBottom: 3,
-          }}
-        >
-          <Text style={[styles.h1, { fontSize: 16 }]}>2</Text>
-        </View>
-        <Text style={[styles.p, { fontSize: 16, color: "gray" }]}>
+        {!!unReadMessages ? (
+          <View
+            style={{
+              width: 20,
+              height: 20,
+              backgroundColor: COLORS.tertiary,
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: 20,
+              marginBottom: 3,
+            }}
+          >
+            <Text style={[styles.h1, { fontSize: 16 }]}>{unReadMessages}</Text>
+          </View>
+        ) : null}
+        <Text style={[styles.p, { fontSize: 12, color: "gray" }]}>
           {dayjs(lastMessage.createdAt).fromNow()}
         </Text>
       </View>

@@ -10,9 +10,14 @@ export const sendMessageSchema = z.object({
 export const chatMessagesSchema = z.object({
   chatId: z.string(),
 });
-export const markMessageAsReadSchema = z.object({
-  messageId: z.string(),
-  senderId: z.string(),
+export const onReadMessagesSchema = z.object({
+  chatId: z.string(),
+});
+export const openMessagesSchema = z.object({
+  chatId: z.string(),
+});
+export const countUnOpenedMessagesSchema = z.object({
+  chatId: z.string(),
 });
 
 export const onNewChatMessageSchema = z.object({

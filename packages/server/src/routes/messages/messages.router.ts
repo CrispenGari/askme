@@ -7,8 +7,10 @@ import {
   onNewMessageSchema,
   chatMessagesSchema,
   onNewChatMessageSchema,
-  markMessageAsReadSchema,
   onMarkAsReadSchema,
+  openMessagesSchema,
+  countUnOpenedMessagesSchema,
+  onReadMessagesSchema,
 } from "../../schema/messages.schema";
 import EventEmitter from "events";
 import { verifyJwt } from "../../utils";
@@ -41,41 +43,95 @@ const ee = new EventEmitter({
   captureRejections: true,
 });
 export const messagesRouter = router({
-  markMessageAsRead: publicProcedure
-    .input(markMessageAsReadSchema)
-    .query(async ({ input: { messageId, senderId }, ctx: { req, prisma } }) => {
+  countUnOpenedMessages: publicProcedure
+    .input(countUnOpenedMessagesSchema)
+    .query(async ({ ctx: { prisma, req }, input: { chatId } }) => {
       try {
         const jwt = req.headers?.authorization?.split(/\s/)[1];
         const { id } = await verifyJwt(jwt as string);
         const user = await prisma.user.findFirst({ where: { id } });
-        const msg = await prisma.message.findFirst({
+        const chat = await prisma.chat.findFirst({
           where: {
-            id: messageId,
+            id: chatId,
             AND: {
-              userId: senderId,
+              messages: {
+                every: {
+                  read: false,
+                },
+              },
+            },
+          },
+          select: {
+            messages: {
+              select: {
+                read: true,
+              },
             },
           },
         });
-        if (!!!user || !!!msg)
+        if (!!!user || !!!chat)
           return {
             error: {
-              field: "user|message",
-              message: "failed query message and user.",
+              field: "user|chat",
+              message: "failed query chat and user.",
             },
           };
-        const message = await prisma.message.update({
+
+        return { chats: chat.messages.length };
+      } catch (error) {
+        return {
+          error: {
+            message: "Unable to start a new chat, server error.",
+            field: "server",
+          },
+        };
+      }
+    }),
+  openMessages: publicProcedure
+    .input(openMessagesSchema)
+    .mutation(async ({ input: { chatId }, ctx: { req, prisma } }) => {
+      try {
+        const jwt = req.headers?.authorization?.split(/\s/)[1];
+        const { id } = await verifyJwt(jwt as string);
+        const user = await prisma.user.findFirst({ where: { id } });
+        const chat = await prisma.chat.findFirst({
           where: {
-            id: messageId,
+            id: chatId,
+          },
+        });
+        if (!!!user || !!!chat)
+          return {
+            error: {
+              field: "user|chat",
+              message: "failed query chat and user.",
+            },
+          };
+        await prisma.message.updateMany({
+          where: {
+            chatId: chat.id,
+            AND: {
+              NOT: {
+                userId: user.id,
+              },
+            },
           },
           data: {
             read: true,
           },
+        });
+        const messages = await prisma.message.findMany({
+          where: {
+            chatId: chat.id,
+          },
           include: {
             sender: true,
           },
+          orderBy: {
+            createdAt: "asc",
+          },
         });
-        ee.emit(Events.ON_MARK_AS_READ, message);
-        return { message };
+        ee.emit(Events.ON_READ_MESSAGES, messages);
+        return { messages };
       } catch (error) {
         return {
           error: {
@@ -239,26 +295,30 @@ export const messagesRouter = router({
         };
       });
     }),
-  onMarkAsRead: publicProcedure
-    .input(onMarkAsReadSchema)
-    .subscription(async ({ input: { uid } }) => {
+  onReadMessages: publicProcedure
+    .input(onReadMessagesSchema)
+    .subscription(async ({ input: { chatId } }) => {
       return observable<
-        Message & {
-          sender: User;
-        }
-      >((emit) => {
-        const handler = (
-          msg: Message & {
+        Array<
+          Message & {
             sender: User;
           }
+        >
+      >((emit) => {
+        const handler = (
+          msg: Array<
+            Message & {
+              sender: User;
+            }
+          >
         ) => {
-          if (msg.sender.id === uid) {
+          if (msg[0].chatId === chatId) {
             emit.next(msg);
           }
         };
-        ee.on(Events.ON_MARK_AS_READ, handler);
+        ee.on(Events.ON_READ_MESSAGES, handler);
         return () => {
-          ee.off(Events.ON_MARK_AS_READ, handler);
+          ee.off(Events.ON_READ_MESSAGES, handler);
         };
       });
     }),

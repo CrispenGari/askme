@@ -33,11 +33,10 @@ const MessagesChat: React.FunctionComponent<
   const [messages, setMessages] = useState<Array<Message & { sender: User }>>(
     []
   );
-
-  const height = useHeaderHeight();
   const scrollViewRef = React.useRef<React.LegacyRef<ScrollView> | any>();
   const friend: User = JSON.parse(route.params.friend);
   const chat: Chat = JSON.parse(route.params.chat);
+  const { mutate } = trpc.messages.openMessages.useMutation();
   const { data, isLoading } = trpc.messages.chatMessages.useQuery({
     chatId: chat.id,
   });
@@ -51,6 +50,29 @@ const MessagesChat: React.FunctionComponent<
       },
     }
   );
+  trpc.messages.onReadMessages.useSubscription(
+    { chatId: chat.id },
+    {
+      onData: (data: any) => {
+        setMessages((state) => state.map((msg) => ({ ...msg, read: true })));
+      },
+    }
+  );
+
+  React.useEffect(() => {
+    let mounted: boolean = true;
+    if (mounted) {
+      (async () => {
+        await mutate({
+          chatId: chat.id,
+        });
+      })();
+    }
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   React.useLayoutEffect(() => {
     let mounted: boolean = true;
     if (mounted) {

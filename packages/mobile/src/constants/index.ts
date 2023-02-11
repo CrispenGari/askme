@@ -29,6 +29,7 @@ export const COLORS = {
   primary: "#C3B091",
   secondary: "#E4CDA7",
   tertiary: "#FFE6BC",
+  blue: "#1D9AF1",
 };
 
 export const SCREEN_WIDTH: number = Dimensions.get("screen").width;

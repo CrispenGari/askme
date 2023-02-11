@@ -3,6 +3,7 @@ import React from "react";
 import { Message, User } from "@askme/server";
 import { COLORS, relativeTimeObject } from "../../constants";
 import { styles } from "../../styles";
+import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import updateLocal from "dayjs/plugin/updateLocale";
@@ -30,7 +31,7 @@ const MessageComponent: React.FunctionComponent<Props> = ({
       style={{
         flexDirection: "row",
         alignItems: "flex-start",
-        width: "80%",
+        maxWidth: "80%",
         alignSelf: me ? "flex-end" : "flex-start",
         marginBottom: 5,
       }}
@@ -59,9 +60,13 @@ const MessageComponent: React.FunctionComponent<Props> = ({
           <Text style={[styles.p, { fontSize: 12, color: "gray" }]}>
             {dayjs(message.createdAt).fromNow()}
           </Text>
-          <Text style={[styles.p, { fontSize: 12, color: "gray" }]}>
-            {message.read ? "read" : "delivered"}
-          </Text>
+          {me ? (
+            <Ionicons
+              name="checkmark-done-outline"
+              size={12}
+              color={message.read ? COLORS.blue : "gray"}
+            />
+          ) : null}
         </View>
       </View>
     </TouchableOpacity>

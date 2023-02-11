@@ -4,7 +4,7 @@ import { AppParamList } from "../../params";
 import { TabIcon } from "../../components";
 import { AntDesign, Feather, Ionicons } from "@expo/vector-icons";
 import { Messages, Settings, Profile } from "../../screens/app";
-import { COLORS } from "../../constants";
+import { COLORS, FONTS } from "../../constants";
 import { AppState } from "react-native";
 import { trpc } from "../../utils/trpc";
 import { useSelector } from "react-redux";
@@ -28,7 +28,7 @@ const App = () => {
   );
   // notify others about my online state
   trpc.user.onUserOnline.useSubscription(
-    { userId: !!user ? user.id : "" },
+    { userId: user?.id ?? "" },
     {
       onData: (data) => {
         setOnlineUser(data);
@@ -90,12 +90,14 @@ const App = () => {
         },
         tabBarShowLabel: false,
         tabBarBadgeStyle: {
-          backgroundColor: "cornflowerblue",
+          backgroundColor: COLORS.primary,
           color: "white",
-          fontSize: 10,
-          maxHeight: 20,
-          maxWidth: 20,
-          marginLeft: 3,
+          fontSize: 16,
+          position: "absolute",
+          top: -5,
+          fontFamily: FONTS.regularBold,
+          justifyContent: "center",
+          alignItems: "center",
         },
         tabBarVisibilityAnimationConfig: {
           hide: {
