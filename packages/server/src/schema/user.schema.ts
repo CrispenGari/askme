@@ -46,3 +46,6 @@ export const onNewDeviceAuthenticationSchema = z.object({
 export const onUserOnlineSchema = z.object({
   userId: z.string(),
 });
+export const onNewUserJoinedSchema = z.object({
+  currentUserId: z.string(),
+});

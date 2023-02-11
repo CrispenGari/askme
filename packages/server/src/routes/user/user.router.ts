@@ -3,6 +3,7 @@ import {
   confirmSchema,
   onAuthStateChangeSchema,
   onNewDeviceAuthenticationSchema,
+  onNewUserJoinedSchema,
   onUserOnlineSchema,
   profileSchema,
   registerSchema,
@@ -191,6 +192,7 @@ export const userRouter = router({
         },
       });
       ee.emit(Events.ON_AUTH_STATE_CHANGE, user);
+      // ee.emit(Events.USER_ONLINE, user);
       return {
         user: null,
         jwt: "",
@@ -516,6 +518,7 @@ export const userRouter = router({
         input: { nickname, phoneNumber, avatar, email },
       }) => {
         try {
+          let isNewUser: boolean = false;
           const user = !!phoneNumber
             ? await prisma.user.findFirst({
                 where: {
@@ -528,6 +531,7 @@ export const userRouter = router({
                 },
               });
           if (!!!user) {
+            isNewUser = true;
             return {
               error: {
                 field: "user",
@@ -563,7 +567,9 @@ export const userRouter = router({
 
           const jwt: string = await signJwt(_user);
           ee.emit(Events.ON_AUTH_STATE_CHANGE, _user);
-          ee.emit(Events.ON_NEW_USER_JOINED, _user);
+          if (isNewUser) {
+            ee.emit(Events.ON_NEW_USER_JOINED, _user);
+          }
           return {
             user: _user,
             jwt,
@@ -619,10 +625,10 @@ export const userRouter = router({
         };
       });
     }),
-
   onNewUserJoined: publicProcedure.subscription(() => {
     return observable<User>((emit) => {
       const handleEvent = (user: User) => {
+        console.log({ user });
         emit.next(user);
       };
       ee.on(Events.ON_NEW_USER_JOINED, handleEvent);

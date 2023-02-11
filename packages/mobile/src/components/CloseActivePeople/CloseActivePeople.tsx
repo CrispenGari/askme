@@ -7,6 +7,8 @@ import { trpc } from "../../utils/trpc";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { MessagesStackParamList } from "../../params";
 import { User } from "@askme/server";
+import { useSelector } from "react-redux";
+import { StateType } from "../../types";
 
 interface Props {
   navigation: StackNavigationProp<
@@ -19,6 +21,7 @@ const CloseActivePeople: React.FunctionComponent<Props> = ({ navigation }) => {
   const [closeActivePeople, setCloseActivePeople] = React.useState<Array<User>>(
     []
   );
+  const { user } = useSelector((state: StateType) => state);
   const { data, isLoading } = trpc.user.users.useQuery();
 
   const { mutate, data: chat } = trpc.chats.initializeChat.useMutation({});
@@ -34,6 +37,27 @@ const CloseActivePeople: React.FunctionComponent<Props> = ({ navigation }) => {
       );
     },
   });
+  trpc.user.onUserOnline.useSubscription(
+    { userId: user?.id ?? "" },
+    {
+      onData: (data) => {
+        if (data?.id) {
+          setCloseActivePeople((state) =>
+            state.map((user) => {
+              if (user.id === data.id) {
+                return {
+                  ...user,
+                  isOnline: true,
+                };
+              } else {
+                return user;
+              }
+            })
+          );
+        }
+      },
+    }
+  );
 
   React.useEffect(() => {
     let mounted: boolean = true;

@@ -27,6 +27,17 @@ const ChatComponent: React.FunctionComponent<Props> = ({
   onPress,
 }) => {
   const [unReadMessages, setUnReadMessages] = useState<number>(0);
+
+  trpc.messages.onReadMessages.useSubscription(
+    { chatId: chat.id },
+    {
+      onData: (data) => {
+        setUnReadMessages(
+          data.flatMap((msg) => !msg.read).filter(Boolean).length
+        );
+      },
+    }
+  );
   const { data } = trpc.messages.countUnOpenedMessages.useQuery({
     chatId: chat.id,
   });

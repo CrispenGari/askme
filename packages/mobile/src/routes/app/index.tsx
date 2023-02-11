@@ -20,6 +20,7 @@ const Tab = createBottomTabNavigator<AppParamList>();
 const App = () => {
   const { user } = useSelector((state: StateType) => state);
   const [onlineUser, setOnlineUser] = useState<User | null>(null);
+  const [newUserJoin, setNewUserJoined] = useState<User | null>(null);
   const { token } = useNotificationsToken({});
 
   const appState = React.useRef(AppState.currentState);
@@ -35,6 +36,11 @@ const App = () => {
       },
     }
   );
+  trpc.user.onNewUserJoined.useSubscription(undefined, {
+    onData: (data) => {
+      setNewUserJoined(data);
+    },
+  });
   const { mutate } = trpc.user.updateUserStateAndNotify.useMutation();
   React.useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextAppState) => {
@@ -56,6 +62,7 @@ const App = () => {
       mounted = false;
     };
   }, [isOnline]);
+
   React.useEffect(() => {
     let mounted: boolean = true;
     if (mounted && !!onlineUser && !!token) {
@@ -71,6 +78,26 @@ const App = () => {
       mounted = false;
     };
   }, [onlineUser, token]);
+
+  console.log({ newUserJoin });
+
+  React.useEffect(() => {
+    let mounted: boolean = true;
+    if (mounted && !!newUserJoin && !!token && user?.id) {
+      (async () => {
+        if (user.id !== newUserJoin.id) {
+          await sendPushNotification(
+            token,
+            `askme - @${newUserJoin.nickname}`,
+            `${newUserJoin.nickname} just joined and is in your space.`
+          );
+        }
+      })();
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [newUserJoin, token, user]);
 
   return (
     <Tab.Navigator
