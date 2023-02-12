@@ -19,7 +19,7 @@ const HOST =
     : "localhost" || "127.0.0.1";
 
 const fastify = Fastify({
-  logger: true,
+  logger: false,
   ignoreTrailingSlash: true,
   maxParamLength: 5000,
 });

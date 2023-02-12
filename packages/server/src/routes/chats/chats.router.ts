@@ -1,7 +1,17 @@
-import { z } from "zod";
-import { initializeChatSchema } from "../../schema/chats.schema";
+import { observable } from "@trpc/server/observable";
+import EventEmitter from "events";
+import { Events } from "../../constants";
+import {
+  initializeChatSchema,
+  onUserTypingSchema,
+  userTypingSchema,
+} from "../../schema/chats.schema";
 import { publicProcedure, router } from "../../trpc/trpc";
 import { verifyJwt } from "../../utils";
+
+const ee = new EventEmitter({
+  captureRejections: true,
+});
 
 export const chatsRouter = router({
   countUnOpenedChats: publicProcedure.query(
@@ -135,6 +145,41 @@ export const chatsRouter = router({
           },
         };
       }
+    }),
+
+  userTyping: publicProcedure
+    .input(userTypingSchema)
+    .mutation(async ({ input: { chatId, typing, userId } }) => {
+      ee.emit(Events.ON_USER_TYPING, { chatId, typing, userId } as {
+        chatId: string;
+        userId: string;
+        typing: boolean;
+      });
+    }),
+  onUserTyping: publicProcedure
+    .input(onUserTypingSchema)
+    .subscription(async ({ input: { chatId: id, userId: uid } }) => {
+      return observable<{ typing: boolean }>((emit) => {
+        const handler = ({
+          chatId,
+          userId,
+          typing,
+        }: {
+          chatId: string;
+          userId: string;
+          typing: boolean;
+        }) => {
+          if (chatId === id && userId !== uid) {
+            emit.next({
+              typing,
+            });
+          }
+        };
+        ee.on(Events.ON_USER_TYPING, handler);
+        return () => {
+          ee.off(Events.ON_USER_TYPING, handler);
+        };
+      });
     }),
 
   allChats: publicProcedure.query(async ({ ctx: { prisma, req } }) => {

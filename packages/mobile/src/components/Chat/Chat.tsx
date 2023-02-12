@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, Image } from "react-native";
 import React, { useState } from "react";
 import { Chat, Message, User } from "@askme/server";
-import { COLORS, relativeTimeObject } from "../../constants";
+import { COLORS, FONTS, relativeTimeObject } from "../../constants";
 import { styles } from "../../styles";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -33,6 +33,7 @@ const ChatComponent: React.FunctionComponent<Props> = ({
 }) => {
   const { user } = useSelector((state: StateType) => state);
   const dispatch = useDispatch();
+  const [isFriendTyping, setIsFriendTyping] = useState(false);
   const { data: chatCounts, refetch: refetchChatsCount } =
     trpc.chats.countUnOpenedChats.useQuery();
   const { data, refetch } = trpc.messages.countUnOpenedMessages.useQuery(
@@ -62,6 +63,17 @@ const ChatComponent: React.FunctionComponent<Props> = ({
         await refetch();
         await refetchReads();
         await refetchChatsCount();
+      },
+    }
+  );
+  trpc.chats.onUserTyping.useSubscription(
+    {
+      chatId: chat.id,
+      userId: user?.id ?? "",
+    },
+    {
+      onData: async (data) => {
+        setIsFriendTyping(data.typing);
       },
     }
   );
@@ -101,18 +113,31 @@ const ChatComponent: React.FunctionComponent<Props> = ({
       <View style={{ flex: 1, marginHorizontal: 4 }}>
         <Text style={[styles.h1]}>{friend.nickname}</Text>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          {lastMessage?.userId === user?.id ? (
-            <Ionicons
-              name="checkmark-done-outline"
-              size={16}
-              color={lastMessage?.read ? COLORS.blue : "gray"}
-              style={{ marginRight: 4 }}
-            />
-          ) : null}
+          {isFriendTyping ? (
+            <Text
+              style={[
+                styles.p,
+                { color: COLORS.blue, fontFamily: FONTS.italic },
+              ]}
+            >
+              typing...
+            </Text>
+          ) : (
+            <>
+              {lastMessage?.userId === user?.id ? (
+                <Ionicons
+                  name="checkmark-done-outline"
+                  size={16}
+                  color={lastMessage?.read ? COLORS.blue : "gray"}
+                  style={{ marginRight: 4 }}
+                />
+              ) : null}
 
-          <Text style={[styles.p, {}]} numberOfLines={1}>
-            {lastMessage?.message}
-          </Text>
+              <Text style={[styles.p, {}]} numberOfLines={1}>
+                {lastMessage?.message}
+              </Text>
+            </>
+          )}
         </View>
       </View>
       <View style={{}}>

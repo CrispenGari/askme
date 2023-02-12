@@ -127,7 +127,6 @@ export const userRouter = router({
         jwt: string;
       }>((emit) => {
         const handleEvent = (user: User | null) => {
-          console.log({ user, userId });
           if (!!user) {
             if (user.id === userId) {
               // return jwt token and user is null
@@ -202,7 +201,6 @@ export const userRouter = router({
         jwt: "",
       };
     } catch (error) {
-      console.log({ error });
       return {
         error: {
           field: "logout",
@@ -320,7 +318,6 @@ export const userRouter = router({
             duid,
           };
         } catch (error) {
-          console.log(error);
           return {
             error: {
               field: "server",
@@ -398,7 +395,6 @@ export const userRouter = router({
             user,
           };
         } catch (error) {
-          console.log(error);
           return {
             error: {
               field: "server",
@@ -503,7 +499,6 @@ export const userRouter = router({
             user: _user,
           };
         } catch (error) {
-          console.log({ error });
           return {
             error: {
               field: "server",
@@ -581,7 +576,6 @@ export const userRouter = router({
             jwt,
           };
         } catch (error) {
-          console.log(error);
           return {
             error: {
               field: "server",
@@ -636,7 +630,6 @@ export const userRouter = router({
   onNewUserJoined: publicProcedure.subscription(() => {
     return observable<User>((emit) => {
       const handleEvent = (user: User) => {
-        console.log({ user });
         emit.next(user);
       };
       ee.on(Events.ON_NEW_USER_JOINED, handleEvent);

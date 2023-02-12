@@ -1,54 +1,36 @@
 version: "3.9"
 services:
-  mysqldb:
-    image: mysql:5.7
-    container_name: mysqlcontainer
-    command: --default-authentication-plugin=mysql_native_password
+  redisdb:
+    image: redis:7.0.8-alpine
+    restart: always
+    ports:
+      - 6379:6379
+    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+    volumes:
+      - redisdb:/data
+  postgres:
+    image: postgres:14.4-alpine
+    container_name: postgres
+    restart: always
     volumes:
       - ./db/init.sql:/docker-entrypoint-initdb.d/0_init.sql
+      - /database:/var/lib/postgresql/data
     ports:
-      - 3306:3306
+      - 5432:5432
     expose:
-      - 3306
+      - 54321
     environment:
-      MYSQL_DATABASE: "todos"
-      MYSQL_USER: "admin"
-      MYSQL_PASSWORD: "password"
-      MYSQL_ROOT_PASSWORD: "password"
+      POSTGRES_DB: askme
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
       SERVICE_TAGS: dev
-      SERVICE_NAME: mysqldb
-      MYSQL_HOST: mysqldb
-    restart: on-failure
-    networks:
-      - internalnet
-  redis:
-    image: redis:7.0.8-alpine
-    container_name: rediscontainer
 
-  expressapp:
-    container_name: api
-    build: .
-    image: expressapp:1.0
-    ports:
-      - "3001:3001"
-    expose:
-      - "3001"
-    environment:
-      DB_HOST: mysqldb
-      DB_PORT: 3306
-      DB_USER: "admin"
-      DB_PASSWORD: "password"
-      DB_NAME: todos
-      DB_CONNECTION_LIMIT: 500
-      SERVICE_TAGS: dev
-      SERVICE_NAME: expressapp
-      PORT: 3001
-    depends_on:
-      - mysqldb
-    networks:
-      - internalnet
 networks:
-  internalnet:
-    driver: bridge
+  bridge:
+    external: true
+    name: bridge
 volumes:
-  database:
+  postgresdb:
+    driver: local
+  redisdb:
+    driver: local

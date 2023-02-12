@@ -15,6 +15,13 @@ export const setUnReadChatsCount = (payload: number) => {
   };
 };
 
+export const setOpenedChatId = (payload: string) => {
+  return {
+    type: constants.SET_OPENED_CHAT_ID,
+    payload,
+  };
+};
+
 export const setUserAction = (payload: User | null) => {
   return {
     type: constants.SET_USER,

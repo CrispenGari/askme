@@ -26,8 +26,9 @@ import { styles } from "../../../../styles";
 import { useHeaderHeight } from "@react-navigation/elements";
 import Form from "../../../../components/Form/Form";
 import { Chat, Message, User } from "@askme/server";
-import { setUnReadChatsCount } from "../../../../actions";
+import { setOpenedChatId, setUnReadChatsCount } from "../../../../actions";
 import { StateType } from "../../../../types";
+import { EventArg } from "@react-navigation/native";
 
 const MessagesChat: React.FunctionComponent<
   MessagesStackNavProps<"MessagesChat">
@@ -38,9 +39,11 @@ const MessagesChat: React.FunctionComponent<
   const scrollViewRef = React.useRef<React.LegacyRef<ScrollView> | any>();
   const friend: User = JSON.parse(route.params.friend);
   const chat: Chat = JSON.parse(route.params.chat);
+  const { user, openedChatId } = useSelector((state: StateType) => state);
   const dispatch = useDispatch();
   const { data: chatCounts, refetch: refetchChatsCount } =
     trpc.chats.countUnOpenedChats.useQuery();
+  const [isFriendTyping, setIsFriendTyping] = useState(false);
   const { mutate } = trpc.messages.openMessages.useMutation();
   const { data, isLoading, refetch } = trpc.messages.chatMessages.useQuery({
     chatId: chat.id,
@@ -65,6 +68,17 @@ const MessagesChat: React.FunctionComponent<
       },
     }
   );
+  trpc.chats.onUserTyping.useSubscription(
+    {
+      chatId: chat.id,
+      userId: user?.id ?? "",
+    },
+    {
+      onData: async (data) => {
+        setIsFriendTyping(data.typing);
+      },
+    }
+  );
 
   React.useEffect(() => {
     let mounted: boolean = true;
@@ -79,6 +93,20 @@ const MessagesChat: React.FunctionComponent<
       mounted = false;
     };
   }, []);
+  React.useEffect(() => {
+    const onFocus = (e: EventArg<"focus", any, undefined>) => {
+      if (chat.id) dispatch(setOpenedChatId(chat.id));
+    };
+    navigation.addListener("focus", onFocus);
+    const onBlur = (e: EventArg<"blur", any, undefined>) => {
+      dispatch(setOpenedChatId(""));
+    };
+    navigation.addListener("blur", onBlur);
+    return () => {
+      navigation.removeListener("blur", onBlur);
+      navigation.removeListener("focus", onFocus);
+    };
+  }, [navigation, dispatch, chat]);
 
   React.useLayoutEffect(() => {
     let mounted: boolean = true;
@@ -112,11 +140,19 @@ const MessagesChat: React.FunctionComponent<
                   friend.email ||
                   "<unknown>"}
               </Text>
-              <Text
-                style={[styles.p, { color: COLORS.secondary, fontSize: 16 }]}
-              >
-                {friend.isOnline ? "online" : "offline"}
-              </Text>
+              {isFriendTyping ? (
+                <Text
+                  style={[styles.p, { color: COLORS.secondary, fontSize: 16 }]}
+                >
+                  typing...
+                </Text>
+              ) : (
+                <Text
+                  style={[styles.p, { color: COLORS.secondary, fontSize: 16 }]}
+                >
+                  {friend.isOnline ? "online" : "offline"}
+                </Text>
+              )}
             </TouchableOpacity>
           );
         },
@@ -156,7 +192,7 @@ const MessagesChat: React.FunctionComponent<
     return () => {
       mounted = false;
     };
-  }, [friend]);
+  }, [friend, isFriendTyping]);
 
   React.useEffect(() => {
     let mounted: boolean = true;

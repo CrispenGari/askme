@@ -54,8 +54,6 @@ const MessagesChats: React.FunctionComponent<
       },
     }
   );
-
-  const dispatch = useDispatch();
   useLayoutEffect(() => {
     let mounted: boolean = true;
     if (mounted) {
@@ -126,6 +124,11 @@ const MessagesChats: React.FunctionComponent<
         ) : null}
         {chats
           .filter((chat) => !!chat.lastMessage)
+          .sort(
+            (a, b) =>
+              new Date(b.lastMessage.createdAt).getTime() -
+              new Date(a.lastMessage.createdAt).getTime()
+          )
           .map((chat) => (
             <ChatComponent
               key={chat.id}

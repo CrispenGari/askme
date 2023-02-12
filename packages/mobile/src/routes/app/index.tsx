@@ -15,12 +15,14 @@ import { Platform } from "react-native";
 import { sendPushNotification } from "../../utils";
 import { useNotificationsToken } from "../../hooks";
 import { User, UserOnlineType } from "@askme/server";
+import { MessageType } from "@askme/server/src/types";
 
 const Tab = createBottomTabNavigator<AppParamList>();
 const App = () => {
-  const { user } = useSelector((state: StateType) => state);
+  const { user, openedChatId } = useSelector((state: StateType) => state);
   const [onlineUser, setOnlineUser] = useState<UserOnlineType | undefined>();
   const [newUserJoin, setNewUserJoined] = useState<User | null>(null);
+  const [newMsg, setNewMsg] = useState<MessageType | undefined>(undefined);
   const { token } = useNotificationsToken({});
 
   const appState = React.useRef(AppState.currentState);
@@ -44,6 +46,14 @@ const App = () => {
       setNewUserJoined(data);
     },
   });
+  trpc.messages.onNewMessage.useSubscription(
+    { uid: user?.id ?? "" },
+    {
+      onData: async (data) => {
+        setNewMsg(data);
+      },
+    }
+  );
   const { mutate } = trpc.user.updateUserStateAndNotify.useMutation();
   React.useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextAppState) => {
@@ -83,6 +93,24 @@ const App = () => {
       mounted = false;
     };
   }, [onlineUser, token]);
+  React.useEffect(() => {
+    let mounted: boolean = true;
+    if (mounted && !!newMsg && !!token) {
+      (async () => {
+        if (openedChatId !== newMsg.chatId && newMsg.userId !== user?.id) {
+          await sendPushNotification(
+            token,
+            `askme - @${newMsg.sender.nickname}`,
+            `${newMsg.message}`
+          );
+          setNewMsg(undefined);
+        }
+      })();
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [newMsg, token, openedChatId, user]);
 
   React.useEffect(() => {
     let mounted: boolean = true;

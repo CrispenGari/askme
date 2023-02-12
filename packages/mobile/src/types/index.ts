@@ -5,6 +5,7 @@ export interface StateType {
   user?: Partial<User>;
   showAppTabs: boolean;
   unReadChats: number;
+  openedChatId: string;
 }
 export interface ActionType<T> {
   payload: T;

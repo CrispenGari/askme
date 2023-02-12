@@ -46,7 +46,6 @@ const Register: React.FunctionComponent<AuthNavProps<"Register">> = ({
       : phoneNumber.replace(/\s/, "");
     const duid = await getDUID();
     if (!!!duid) {
-      console.log("No duid");
       return;
     }
 

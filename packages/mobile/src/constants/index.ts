@@ -1,6 +1,6 @@
 import { Dimensions } from "react-native";
 
-export const severDomain: string = `9c02-197-98-127-119.ngrok.io`;
+export const severDomain: string = `5af5-197-98-127-119.ngrok.io`;
 
 export const relativeTimeObject = {
   future: "in %s",
@@ -23,6 +23,7 @@ export const constants = {
   SET_USER: "SET_USER",
   SHOW_APP_TABS: "SHOW_APP_TABS",
   SET_CHAT_COUNT: "SET_CHAT_COUNT",
+  SET_OPENED_CHAT_ID: "SET_OPENED_CHAT_ID",
 };
 export const TOKEN_KEY: string = "jwt";
 export const COLORS = {
