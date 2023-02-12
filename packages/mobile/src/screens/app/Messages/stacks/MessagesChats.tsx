@@ -1,17 +1,10 @@
-import { View, Text, Button, ScrollView } from "react-native";
+import { View, ScrollView } from "react-native";
 import React, { useEffect, useLayoutEffect, useState } from "react";
 import { trpc } from "../../../../utils/trpc";
-import { sendPushNotification, store } from "../../../../utils";
-import { COLORS, TOKEN_KEY } from "../../../../constants";
+import { COLORS } from "../../../../constants";
 import { MessagesStackNavProps } from "../../../../params";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  useLocationPermission,
-  useNotificationsToken,
-  useSensorsPermission,
-} from "../../../../hooks";
-import { DeviceMotion } from "expo-sensors";
-import * as Location from "expo-location";
+import { useSelector } from "react-redux";
+
 import {
   ChatComponent,
   CircularIndicator,
@@ -21,11 +14,7 @@ import { Chat, Message, User } from "@askme/server";
 import { StateType } from "../../../../types";
 const MessagesChats: React.FunctionComponent<
   MessagesStackNavProps<"MessagesChats">
-> = ({ route, navigation }) => {
-  const [location, setLocation] = useState<Location.LocationObject>();
-  const { granted: locationPermission } = useLocationPermission();
-  const { granted: sensorsPermission } = useSensorsPermission({});
-  const { token } = useNotificationsToken({});
+> = ({ navigation }) => {
   const { user: me } = useSelector((state: StateType) => state);
   const { isLoading, data, refetch } = trpc.chats.allChats.useQuery();
   const [chats, setChats] = React.useState<
@@ -93,18 +82,20 @@ const MessagesChats: React.FunctionComponent<
       mounted = false;
     };
   }, [data]);
+  const { data: spaces, refetch: refetchSpaces } =
+    trpc.spaces.peopleInMySpace.useQuery({
+      userId: me?.id ?? "",
+    });
+  trpc.spaces.onUserJoinSpace.useSubscription(
+    { userId: me?.id ?? "" },
+    {
+      onData: async (data) => {
+        await refetchSpaces();
+      },
+    }
+  );
 
-  // useEffect(() => {
-  //   const onMove = async (event: any) => {
-  //     if (!locationPermission) return;
-  //     const location = await Location.getCurrentPositionAsync();
-  //     setLocation(location);
-  //   };
-  //   DeviceMotion.addListener(onMove);
-  //   return () => {
-  //     DeviceMotion.removeAllListeners();
-  //   };
-  // }, [locationPermission]);
+  console.log(JSON.stringify({ spaces }, null, 2));
 
   return (
     <View style={{ flex: 1 }}>

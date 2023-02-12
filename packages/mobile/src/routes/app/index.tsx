@@ -9,11 +9,13 @@ import { AppState } from "react-native";
 import { trpc } from "../../utils/trpc";
 import { useSelector } from "react-redux";
 import { StateType } from "../../types";
-import * as Device from "expo-device";
-import * as Notifications from "expo-notifications";
-import { Platform } from "react-native";
+import * as Location from "expo-location";
 import { sendPushNotification } from "../../utils";
-import { useNotificationsToken } from "../../hooks";
+import {
+  useLocationPermission,
+  useNotificationsToken,
+  useSensorsPermission,
+} from "../../hooks";
 import { User, UserOnlineType } from "@askme/server";
 import { MessageType } from "@askme/server/src/types";
 
@@ -23,6 +25,9 @@ const App = () => {
   const [onlineUser, setOnlineUser] = useState<UserOnlineType | undefined>();
   const [newUserJoin, setNewUserJoined] = useState<User | null>(null);
   const [newMsg, setNewMsg] = useState<MessageType | undefined>(undefined);
+  const [location, setLocation] = useState<Location.LocationObject>();
+  const { granted: locationPermission } = useLocationPermission();
+  const { granted: sensorsPermission } = useSensorsPermission({});
   const { token } = useNotificationsToken({});
 
   const appState = React.useRef(AppState.currentState);
@@ -55,6 +60,7 @@ const App = () => {
     }
   );
   const { mutate } = trpc.user.updateUserStateAndNotify.useMutation();
+  const { mutate: mutateJoinSpace } = trpc.spaces.joinSpace.useMutation();
   React.useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextAppState) => {
       setIsOnline(nextAppState === "active");
@@ -75,6 +81,27 @@ const App = () => {
       mounted = false;
     };
   }, [isOnline]);
+
+  React.useEffect(() => {
+    let mounted: boolean = true;
+    if (mounted && locationPermission) {
+      (async () => {
+        const location = await Location.getCurrentPositionAsync();
+        if (!!location && !!user?.id) {
+          await mutateJoinSpace({
+            userId: user.id,
+            coodinates: {
+              lat: location.coords.latitude,
+              lon: location.coords.longitude,
+            },
+          });
+        }
+      })();
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [locationPermission]);
 
   React.useEffect(() => {
     let mounted: boolean = true;

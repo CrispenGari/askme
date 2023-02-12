@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setUserAction } from "../actions";
 import Circular from "../components/CircularIndicator/CircularIndicator";
 import { COLORS, TOKEN_KEY } from "../constants";
+import * as Location from "expo-location";
 import { StateType } from "../types";
 import { store } from "../utils";
 import { trpc } from "../utils/trpc";
@@ -14,6 +15,7 @@ import Auth from "./auth";
 const Routes = () => {
   const { duid } = useSelector((state: StateType) => state);
   const dispatch = useDispatch();
+  const { isLoading, data, mutate } = trpc.user.fetchUserOrFail.useMutation();
   const [user, setUser] = useState<User | null>(null);
   trpc.user.onAuthStateChange.useSubscription(
     { duid },
@@ -41,7 +43,7 @@ const Routes = () => {
     },
   });
   // const dispatch = useDispatch();
-  const { isLoading, data, mutate } = trpc.user.fetchUserOrFail.useMutation();
+
   React.useEffect(() => {
     let mounted: boolean = true;
     if (mounted) {
