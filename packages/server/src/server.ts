@@ -8,6 +8,7 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import ws from "@fastify/websocket";
 export { type User, type Chat, type Message } from "@prisma/client";
+export { type UserOnlineType } from "./types";
 
 _();
 

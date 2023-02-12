@@ -22,39 +22,21 @@ const CloseActivePeople: React.FunctionComponent<Props> = ({ navigation }) => {
     []
   );
   const { user } = useSelector((state: StateType) => state);
-  const { data, isLoading } = trpc.user.users.useQuery();
+  const { data, isLoading, refetch } = trpc.user.users.useQuery();
 
   const { mutate, data: chat } = trpc.chats.initializeChat.useMutation({});
   const [friend, setFriend] = React.useState<User | undefined>();
 
   trpc.user.onNewUserJoined.useSubscription(undefined, {
-    onData: (data) => {
-      setCloseActivePeople((state) =>
-        [data, ...state].filter(
-          (person, index, self) =>
-            index === self.findIndex((t) => t.id === person.id)
-        )
-      );
+    onData: async (data) => {
+      await refetch();
     },
   });
   trpc.user.onUserOnline.useSubscription(
     { userId: user?.id ?? "" },
     {
-      onData: (data) => {
-        if (data?.id) {
-          setCloseActivePeople((state) =>
-            state.map((user) => {
-              if (user.id === data.id) {
-                return {
-                  ...user,
-                  isOnline: true,
-                };
-              } else {
-                return user;
-              }
-            })
-          );
-        }
+      onData: async (data) => {
+        await refetch();
       },
     }
   );

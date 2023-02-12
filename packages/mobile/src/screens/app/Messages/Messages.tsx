@@ -5,20 +5,21 @@ import MessagesChats from "./stacks/MessagesChats";
 import MessagesChat from "./stacks/MessagesChat";
 import MessagesProfile from "./stacks/MessagesProfile";
 import { COLORS, FONTS } from "../../../constants";
-import { trpc } from "../../../utils/trpc";
+import { useSelector } from "react-redux";
+import { StateType } from "../../../types";
 
 const Stack = createStackNavigator<MessagesStackParamList>();
 const Messages: React.FunctionComponent<AppNavProps<"Messages">> = ({
   navigation,
 }) => {
-  const [unReadChats, setUnReadChats] = useState<number>(0);
-  const { data } = trpc.chats.countUnOpenedChats.useQuery();
+  const { unReadChats } = useSelector((state: StateType) => state);
 
   useLayoutEffect(() => {
     let mounted: boolean = true;
-    if (mounted) {
+
+    if (mounted && !!unReadChats) {
       navigation.setOptions({
-        tabBarBadge: unReadChats >= 9 ? `${unReadChats}+` : unReadChats,
+        tabBarBadge: unReadChats >= 9 ? `9+` : unReadChats,
         tabBarBadgeStyle: {
           display: unReadChats === 0 ? "none" : "flex",
           backgroundColor: COLORS.primary,
@@ -36,15 +37,6 @@ const Messages: React.FunctionComponent<AppNavProps<"Messages">> = ({
       mounted = false;
     };
   }, [unReadChats]);
-  useEffect(() => {
-    let mounted: boolean = true;
-    if (mounted && !!data?.chats) {
-      setUnReadChats(data.chats);
-    }
-    return () => {
-      mounted = false;
-    };
-  }, [data]);
 
   return (
     <Stack.Navigator

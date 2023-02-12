@@ -23,6 +23,7 @@ import {
 import { observable } from "@trpc/server/observable";
 import { User } from "@prisma/client";
 import EventEmitter from "events";
+import { UserOnlineType } from "../../types";
 
 const ee = new EventEmitter({
   captureRejections: true,
@@ -191,8 +192,11 @@ export const userRouter = router({
           isLoggedIn: false,
         },
       });
+      ee.emit(Events.USER_ONLINE, {
+        user,
+        status: "offline",
+      } as UserOnlineType);
       ee.emit(Events.ON_AUTH_STATE_CHANGE, user);
-      // ee.emit(Events.USER_ONLINE, user);
       return {
         user: null,
         jwt: "",
@@ -518,7 +522,6 @@ export const userRouter = router({
         input: { nickname, phoneNumber, avatar, email },
       }) => {
         try {
-          let isNewUser: boolean = false;
           const user = !!phoneNumber
             ? await prisma.user.findFirst({
                 where: {
@@ -530,8 +533,8 @@ export const userRouter = router({
                   email,
                 },
               });
+
           if (!!!user) {
-            isNewUser = true;
             return {
               error: {
                 field: "user",
@@ -541,6 +544,7 @@ export const userRouter = router({
               },
             };
           }
+          const { newUser } = user;
           const _user = !!phoneNumber
             ? await prisma.user.update({
                 where: {
@@ -549,6 +553,7 @@ export const userRouter = router({
                 data: {
                   isOnline: false,
                   isLoggedIn: true,
+                  newUser: false,
                   nickname,
                   avatar,
                 },
@@ -560,6 +565,7 @@ export const userRouter = router({
                 data: {
                   isOnline: true,
                   isLoggedIn: true,
+                  newUser: false,
                   nickname,
                   avatar,
                 },
@@ -567,7 +573,7 @@ export const userRouter = router({
 
           const jwt: string = await signJwt(_user);
           ee.emit(Events.ON_AUTH_STATE_CHANGE, _user);
-          if (isNewUser) {
+          if (newUser) {
             ee.emit(Events.ON_NEW_USER_JOINED, _user);
           }
           return {
@@ -600,9 +606,11 @@ export const userRouter = router({
             isOnline,
           },
         });
-        if (isOnline) {
-          ee.emit(Events.USER_ONLINE, user);
-        }
+        ee.emit(Events.USER_ONLINE, {
+          user,
+          status: isOnline ? "online" : "offline",
+        } as UserOnlineType);
+
         return true;
       } catch (error) {
         return false;
@@ -611,11 +619,11 @@ export const userRouter = router({
   onUserOnline: publicProcedure
     .input(onUserOnlineSchema)
     .subscription(({ input: { userId } }) => {
-      return observable<User | null>((emit) => {
-        const handleEvent = (user: User | null) => {
+      return observable<UserOnlineType>((emit) => {
+        const handleEvent = ({ user, status }: UserOnlineType) => {
           if (!!user) {
             if (user.id !== userId) {
-              emit.next(user);
+              emit.next({ user, status });
             }
           }
         };

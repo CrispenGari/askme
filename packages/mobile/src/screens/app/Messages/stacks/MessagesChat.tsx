@@ -13,7 +13,7 @@ import {
   TextInput,
 } from "react-native";
 import React, { useLayoutEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { MessagesStackNavProps } from "../../../../params";
 import {
   AppBackButton,
@@ -26,6 +26,8 @@ import { styles } from "../../../../styles";
 import { useHeaderHeight } from "@react-navigation/elements";
 import Form from "../../../../components/Form/Form";
 import { Chat, Message, User } from "@askme/server";
+import { setUnReadChatsCount } from "../../../../actions";
+import { StateType } from "../../../../types";
 
 const MessagesChat: React.FunctionComponent<
   MessagesStackNavProps<"MessagesChat">
@@ -36,25 +38,30 @@ const MessagesChat: React.FunctionComponent<
   const scrollViewRef = React.useRef<React.LegacyRef<ScrollView> | any>();
   const friend: User = JSON.parse(route.params.friend);
   const chat: Chat = JSON.parse(route.params.chat);
+  const dispatch = useDispatch();
+  const { data: chatCounts, refetch: refetchChatsCount } =
+    trpc.chats.countUnOpenedChats.useQuery();
   const { mutate } = trpc.messages.openMessages.useMutation();
-  const { data, isLoading } = trpc.messages.chatMessages.useQuery({
+  const { data, isLoading, refetch } = trpc.messages.chatMessages.useQuery({
     chatId: chat.id,
   });
+
   trpc.messages.onNewChatMessage.useSubscription(
     {
       chatId: chat.id,
     },
     {
-      onData: (data: any) => {
-        setMessages((state) => [...state, data]);
+      onData: async (data) => {
+        await refetch();
+        await refetchChatsCount();
       },
     }
   );
   trpc.messages.onReadMessages.useSubscription(
     { chatId: chat.id },
     {
-      onData: (data: any) => {
-        setMessages((state) => state.map((msg) => ({ ...msg, read: true })));
+      onData: async (data) => {
+        await refetch();
       },
     }
   );
@@ -158,6 +165,16 @@ const MessagesChat: React.FunctionComponent<
       mounted = false;
     };
   }, [data]);
+
+  React.useEffect(() => {
+    let mounted: boolean = true;
+    if (mounted && !!chatCounts?.chats) {
+      dispatch(setUnReadChatsCount(chatCounts.chats));
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [chatCounts, dispatch]);
 
   return (
     <View

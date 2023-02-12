@@ -8,6 +8,13 @@ export const setDuid = (payload: string) => {
   };
 };
 
+export const setUnReadChatsCount = (payload: number) => {
+  return {
+    type: constants.SET_CHAT_COUNT,
+    payload,
+  };
+};
+
 export const setUserAction = (payload: User | null) => {
   return {
     type: constants.SET_USER,

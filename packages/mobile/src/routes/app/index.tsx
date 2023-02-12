@@ -14,12 +14,12 @@ import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { sendPushNotification } from "../../utils";
 import { useNotificationsToken } from "../../hooks";
-import { User } from "@askme/server";
+import { User, UserOnlineType } from "@askme/server";
 
 const Tab = createBottomTabNavigator<AppParamList>();
 const App = () => {
   const { user } = useSelector((state: StateType) => state);
-  const [onlineUser, setOnlineUser] = useState<User | null>(null);
+  const [onlineUser, setOnlineUser] = useState<UserOnlineType | undefined>();
   const [newUserJoin, setNewUserJoined] = useState<User | null>(null);
   const { token } = useNotificationsToken({});
 
@@ -31,8 +31,11 @@ const App = () => {
   trpc.user.onUserOnline.useSubscription(
     { userId: user?.id ?? "" },
     {
-      onData: (data) => {
-        setOnlineUser(data);
+      onData: ({ user, status }) => {
+        setOnlineUser({
+          status,
+          user,
+        });
       },
     }
   );
@@ -69,8 +72,10 @@ const App = () => {
       (async () => {
         await sendPushNotification(
           token,
-          `askme - @${onlineUser.nickname}`,
-          `${onlineUser.nickname} is now online`
+          `askme - @${onlineUser.user?.nickname}`,
+          onlineUser.status === "online"
+            ? `${onlineUser.user?.nickname} is now online`
+            : `${onlineUser.user?.nickname} went offline.`
         );
       })();
     }
@@ -78,8 +83,6 @@ const App = () => {
       mounted = false;
     };
   }, [onlineUser, token]);
-
-  console.log({ newUserJoin });
 
   React.useEffect(() => {
     let mounted: boolean = true;

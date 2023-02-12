@@ -25,21 +25,19 @@ export const chatsRouter = router({
               },
             },
           },
-          orderBy: {
-            updatedAt: "desc",
-          },
           include: {
             messages: {
               select: {
                 read: true,
-              },
-              where: {
-                read: false,
+                userId: true,
               },
             },
           },
         });
-        const _ch = chats.flatMap((chat) => chat.messages);
+        const messages = chats.flatMap((m) => m.messages);
+        const _ch = messages
+          .filter((msg) => msg.userId !== me.id)
+          .filter((m) => m.read === false);
         return { chats: _ch.length };
       } catch (error) {
         return {

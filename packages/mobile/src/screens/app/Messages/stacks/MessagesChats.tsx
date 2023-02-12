@@ -27,7 +27,7 @@ const MessagesChats: React.FunctionComponent<
   const { granted: sensorsPermission } = useSensorsPermission({});
   const { token } = useNotificationsToken({});
   const { user: me } = useSelector((state: StateType) => state);
-
+  const { isLoading, data, refetch } = trpc.chats.allChats.useQuery();
   const [chats, setChats] = React.useState<
     Array<
       Chat & {
@@ -41,39 +41,19 @@ const MessagesChats: React.FunctionComponent<
       uid: me?.id ?? "",
     },
     {
-      onData: (data) => {
-        const {
-          users,
-          id,
-          messages,
-          createdAt,
-          userToUserChatId,
-          updatedAt,
-          chatName,
-        } = data.chat;
-        const chat: Chat & {
-          lastMessage: Message;
-          friend: User;
-        } = {
-          friend: users[0].user,
-          lastMessage: messages[0],
-          chatName,
-          createdAt,
-          id,
-          updatedAt,
-          userToUserChatId,
-        };
-
-        setChats((state) => [
-          ...new Map(
-            [chat, ...state].map((item) => [item["id"], item])
-          ).values(),
-        ]);
+      onData: async (data) => {
+        await refetch();
       },
     }
   );
-
-  const { isLoading, data } = trpc.chats.allChats.useQuery();
+  trpc.user.onUserOnline.useSubscription(
+    { userId: me?.id ?? "" },
+    {
+      onData: async (data) => {
+        await refetch();
+      },
+    }
+  );
 
   const dispatch = useDispatch();
   useLayoutEffect(() => {
@@ -144,18 +124,21 @@ const MessagesChats: React.FunctionComponent<
             <CircularIndicator color={COLORS.main} size={20} />
           </View>
         ) : null}
-        {chats.map((chat) => (
-          <ChatComponent
-            key={chat.id}
-            chat={chat}
-            onPress={() => {
-              navigation.navigate("MessagesChat", {
-                chat: JSON.stringify(chat),
-                friend: JSON.stringify(chat.friend),
-              });
-            }}
-          />
-        ))}
+        {chats
+          .filter((chat) => !!chat.lastMessage)
+          .map((chat) => (
+            <ChatComponent
+              key={chat.id}
+              chat={chat}
+              refetchReads={refetch}
+              onPress={() => {
+                navigation.navigate("MessagesChat", {
+                  chat: JSON.stringify(chat),
+                  friend: JSON.stringify(chat.friend),
+                });
+              }}
+            />
+          ))}
       </ScrollView>
     </View>
   );

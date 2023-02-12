@@ -15,30 +15,8 @@ import {
 import EventEmitter from "events";
 import { verifyJwt } from "../../utils";
 import { ChatsOnUsers, Message, User } from "@prisma/client";
+import { MessageType } from "../../types";
 
-type MessageType = Message & {
-  chat: {
-    messages: {
-      message: string;
-      id: string;
-      createdAt: Date;
-      updatedAt: Date;
-      userId: string;
-      chatId: string;
-      sender: User;
-      read: boolean;
-    }[];
-    id: string;
-    chatName: string;
-    createdAt: Date;
-    updatedAt: Date;
-    userToUserChatId: string;
-    users: (ChatsOnUsers & {
-      user: User;
-    })[];
-  };
-  sender: User;
-};
 const ee = new EventEmitter({
   captureRejections: true,
 });
@@ -53,13 +31,6 @@ export const messagesRouter = router({
         const chat = await prisma.chat.findFirst({
           where: {
             id: chatId,
-            AND: {
-              messages: {
-                every: {
-                  read: false,
-                },
-              },
-            },
           },
           select: {
             messages: {
@@ -77,7 +48,7 @@ export const messagesRouter = router({
             },
           };
 
-        return { chats: chat.messages.length };
+        return { chats: chat.messages.filter((msg) => !msg.read).length };
       } catch (error) {
         return {
           error: {

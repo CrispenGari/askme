@@ -26,6 +26,7 @@ model User {
   // user state
   isLoggedIn Boolean @default(false)
   isOnline Boolean @default(false)
+  newUser Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -7,6 +7,8 @@ import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import updateLocal from "dayjs/plugin/updateLocale";
+import { useSelector } from "react-redux";
+import { StateType } from "../../types";
 
 dayjs.extend(relativeTime);
 dayjs.extend(updateLocal);

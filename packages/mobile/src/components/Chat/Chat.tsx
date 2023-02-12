@@ -8,6 +8,9 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import updateLocal from "dayjs/plugin/updateLocale";
 import { trpc } from "../../utils/trpc";
 import { Ionicons } from "@expo/vector-icons";
+import { useDispatch, useSelector } from "react-redux";
+import { StateType } from "../../types";
+import { setUnReadChatsCount } from "../../actions";
 
 dayjs.extend(relativeTime);
 dayjs.extend(updateLocal);
@@ -21,35 +24,58 @@ interface Props {
     friend: User;
   };
   onPress?: () => void;
+  refetchReads?: any;
 }
 const ChatComponent: React.FunctionComponent<Props> = ({
   chat: { friend, lastMessage, ...chat },
   onPress,
+  refetchReads,
 }) => {
-  const [unReadMessages, setUnReadMessages] = useState<number>(0);
+  const { user } = useSelector((state: StateType) => state);
+  const dispatch = useDispatch();
+  const { data: chatCounts, refetch: refetchChatsCount } =
+    trpc.chats.countUnOpenedChats.useQuery();
+  const { data, refetch } = trpc.messages.countUnOpenedMessages.useQuery(
+    {
+      chatId: chat.id,
+    },
+    {
+      enabled: true,
+    }
+  );
 
   trpc.messages.onReadMessages.useSubscription(
     { chatId: chat.id },
     {
-      onData: (data) => {
-        setUnReadMessages(
-          data.flatMap((msg) => !msg.read).filter(Boolean).length
-        );
+      onData: async (data) => {
+        await refetch();
+        await refetchReads();
+        await refetchChatsCount();
       },
     }
   );
-  const { data } = trpc.messages.countUnOpenedMessages.useQuery({
-    chatId: chat.id,
-  });
+
+  trpc.messages.onNewMessage.useSubscription(
+    { uid: user?.id ?? "" },
+    {
+      onData: async (data) => {
+        await refetch();
+        await refetchReads();
+        await refetchChatsCount();
+      },
+    }
+  );
+
   React.useEffect(() => {
     let mounted: boolean = true;
-    if (mounted && !!data?.chats) {
-      setUnReadMessages(data.chats);
+    if (mounted && !!chatCounts?.chats) {
+      dispatch(setUnReadChatsCount(chatCounts.chats));
     }
     return () => {
       mounted = false;
     };
-  }, [data]);
+  }, [chatCounts, dispatch]);
+
   return (
     <TouchableOpacity
       style={{
@@ -75,18 +101,22 @@ const ChatComponent: React.FunctionComponent<Props> = ({
       <View style={{ flex: 1, marginHorizontal: 4 }}>
         <Text style={[styles.h1]}>{friend.nickname}</Text>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Ionicons
-            name="checkmark-done-outline"
-            size={16}
-            color={lastMessage.read ? COLORS.blue : "gray"}
-          />
-          <Text style={[styles.p, { marginLeft: 4 }]} numberOfLines={1}>
+          {lastMessage?.userId === user?.id ? (
+            <Ionicons
+              name="checkmark-done-outline"
+              size={16}
+              color={lastMessage?.read ? COLORS.blue : "gray"}
+              style={{ marginRight: 4 }}
+            />
+          ) : null}
+
+          <Text style={[styles.p, {}]} numberOfLines={1}>
             {lastMessage?.message}
           </Text>
         </View>
       </View>
       <View style={{}}>
-        {!!unReadMessages ? (
+        {!!data?.chats && lastMessage?.userId !== user?.id ? (
           <View
             style={{
               width: 20,
@@ -98,11 +128,11 @@ const ChatComponent: React.FunctionComponent<Props> = ({
               marginBottom: 3,
             }}
           >
-            <Text style={[styles.h1, { fontSize: 16 }]}>{unReadMessages}</Text>
+            <Text style={[styles.h1, { fontSize: 16 }]}>{data.chats}</Text>
           </View>
         ) : null}
         <Text style={[styles.p, { fontSize: 12, color: "gray" }]}>
-          {dayjs(lastMessage.createdAt).fromNow()}
+          {dayjs(lastMessage?.createdAt).fromNow()}
         </Text>
       </View>
     </TouchableOpacity>
