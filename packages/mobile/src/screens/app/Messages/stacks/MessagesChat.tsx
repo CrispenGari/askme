@@ -11,6 +11,7 @@ import {
   SafeAreaView,
   Keyboard,
   TextInput,
+  RefreshControl,
 } from "react-native";
 import React, { useLayoutEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -39,7 +40,7 @@ const MessagesChat: React.FunctionComponent<
   const scrollViewRef = React.useRef<React.LegacyRef<ScrollView> | any>();
   const friend: User = JSON.parse(route.params.friend);
   const chat: Chat = JSON.parse(route.params.chat);
-  const { user, openedChatId } = useSelector((state: StateType) => state);
+  const { user } = useSelector((state: StateType) => state);
   const dispatch = useDispatch();
   const { data: chatCounts, refetch: refetchChatsCount } =
     trpc.chats.countUnOpenedChats.useQuery();
@@ -235,6 +236,9 @@ const MessagesChat: React.FunctionComponent<
             backgroundColor: COLORS.tertiary,
             padding: 5,
           }}
+          refreshControl={
+            <RefreshControl refreshing={isLoading} onRefresh={() => {}} />
+          }
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}
           scrollEnabled={true}
@@ -247,11 +251,6 @@ const MessagesChat: React.FunctionComponent<
             Your chats with {friend.nickname} are end-to-end encrypted, not even{" "}
             {"askme"} team can access your messages.
           </Text>
-          {isLoading ? (
-            <View style={{ alignItems: "center" }}>
-              <CircularIndicator color={COLORS.main} size={20} />
-            </View>
-          ) : null}
 
           {messages.map((message) => (
             <MessageComponent
