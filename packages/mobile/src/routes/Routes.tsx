@@ -6,7 +6,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { setUserAction } from "../actions";
 import Circular from "../components/CircularIndicator/CircularIndicator";
 import { COLORS, TOKEN_KEY } from "../constants";
-import * as Location from "expo-location";
 import { StateType } from "../types";
 import { store } from "../utils";
 import { trpc } from "../utils/trpc";

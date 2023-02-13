@@ -8,6 +8,7 @@ import ProfileAvatar from "../../../../components/ProfileAvatar/ProfileAvatar";
 import ProfileDetails from "../../../../components/ProfileDetails/ProfileDetails";
 import ProfileLocation from "../../../../components/ProfileLocation/ProfileLocation";
 import ProfileLogout from "../../../../components/ProfileLogout/ProfileLogout";
+import ProfileManageSpace from "../../../../components/ProfileManageSpace/ProfileManageSpace";
 
 const ProfileLanding: React.FunctionComponent<
   ProfileStackNavProps<"ProfileLanding">
@@ -37,6 +38,7 @@ const ProfileLanding: React.FunctionComponent<
       <ProfileAvatar allowEdit={true} user={user} />
       <ProfileDetails allowEdit={true} user={user} />
       <ProfileLocation user={user} />
+      <ProfileManageSpace />
       <ProfileLogout />
       <View style={{ height: 50 }} />
     </ScrollView>

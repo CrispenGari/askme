@@ -1,16 +1,10 @@
 import {
   View,
   Text,
-  Button,
   TouchableOpacity,
   Image,
   KeyboardAvoidingView,
   ScrollView,
-  TouchableWithoutFeedback,
-  Dimensions,
-  SafeAreaView,
-  Keyboard,
-  TextInput,
   RefreshControl,
 } from "react-native";
 import React, { useLayoutEffect, useState } from "react";

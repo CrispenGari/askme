@@ -2,7 +2,14 @@ import { Dimensions } from "react-native";
 
 export const severDomain: string = `3ac2-197-98-127-119.ngrok.io`;
 export const messagesLimit: number = 10;
-
+export const constants = {
+  SET_DUID: "SET_DUID",
+  SET_USER: "SET_USER",
+  SHOW_APP_TABS: "SHOW_APP_TABS",
+  SET_CHAT_COUNT: "SET_CHAT_COUNT",
+  SET_OPENED_CHAT_ID: "SET_OPENED_CHAT_ID",
+  SET_MY_LOCATION: "SET_MY_LOCATION",
+};
 export const relativeTimeObject = {
   future: "in %s",
   past: "%s",
@@ -19,13 +26,6 @@ export const relativeTimeObject = {
   yy: "%dy",
 };
 
-export const constants = {
-  SET_DUID: "SET_DUID",
-  SET_USER: "SET_USER",
-  SHOW_APP_TABS: "SHOW_APP_TABS",
-  SET_CHAT_COUNT: "SET_CHAT_COUNT",
-  SET_OPENED_CHAT_ID: "SET_OPENED_CHAT_ID",
-};
 export const TOKEN_KEY: string = "jwt";
 export const COLORS = {
   main: "#8E806A",

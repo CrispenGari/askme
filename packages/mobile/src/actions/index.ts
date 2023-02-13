@@ -1,6 +1,6 @@
 import { User } from "@askme/server";
 import { constants } from "../constants";
-
+import * as Location from "expo-location";
 export const setDuid = (payload: string) => {
   return {
     type: constants.SET_DUID,
@@ -15,6 +15,12 @@ export const setUnReadChatsCount = (payload: number) => {
   };
 };
 
+export const setMyLocation = (payload: Location.LocationObjectCoords) => {
+  return {
+    type: constants.SET_MY_LOCATION,
+    payload,
+  };
+};
 export const setOpenedChatId = (payload: string) => {
   return {
     type: constants.SET_OPENED_CHAT_ID,

@@ -7,7 +7,7 @@ import { Messages, Settings, Profile } from "../../screens/app";
 import { COLORS, FONTS } from "../../constants";
 import { AppState } from "react-native";
 import { trpc } from "../../utils/trpc";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { StateType } from "../../types";
 import * as Location from "expo-location";
 import { sendPushNotification } from "../../utils";
@@ -18,6 +18,7 @@ import {
 } from "../../hooks";
 import { User, UserOnlineType } from "@askme/server";
 import { MessageType } from "@askme/server/src/types";
+import { setMyLocation } from "../../actions";
 
 const Tab = createBottomTabNavigator<AppParamList>();
 const App = () => {
@@ -25,10 +26,10 @@ const App = () => {
   const [onlineUser, setOnlineUser] = useState<UserOnlineType | undefined>();
   const [newUserJoin, setNewUserJoined] = useState<User | null>(null);
   const [newMsg, setNewMsg] = useState<MessageType | undefined>(undefined);
-  const [location, setLocation] = useState<Location.LocationObject>();
   const { granted: locationPermission } = useLocationPermission();
   const { granted: sensorsPermission } = useSensorsPermission({});
   const { token } = useNotificationsToken({});
+  const dispatch = useDispatch();
 
   const appState = React.useRef(AppState.currentState);
   const [isOnline, setIsOnline] = React.useState<boolean>(
@@ -147,6 +148,19 @@ const App = () => {
       mounted = false;
     };
   }, [newUserJoin, token, user]);
+
+  React.useEffect(() => {
+    let mounted: boolean = true;
+    if (mounted && locationPermission) {
+      (async () => {
+        const { coords } = await Location.getCurrentPositionAsync();
+        dispatch(setMyLocation(coords));
+      })();
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [locationPermission, dispatch]);
 
   return (
     <Tab.Navigator

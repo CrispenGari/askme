@@ -38,6 +38,29 @@ export const spacesRouter = router({
             },
           };
         }
+
+        const _location = await prisma.location.findFirst({
+          where: {
+            userId: me.id,
+          },
+        });
+
+        if (!!_location) {
+          const __location = await prisma.location.update({
+            where: {
+              id: _location.id,
+            },
+            include: {
+              user: true,
+            },
+            data: {
+              lat,
+              lon,
+            },
+          });
+          ee.emit(Events.ON_USER_JOIN_SPACE, __location);
+          return { location: __location };
+        }
         const location = await prisma.location.create({
           data: {
             lat,
@@ -48,12 +71,8 @@ export const spacesRouter = router({
               },
             },
           },
-          select: {
+          include: {
             user: true,
-            id: true,
-            lat: true,
-            lon: true,
-            userId: true,
           },
         });
         ee.emit(Events.ON_USER_JOIN_SPACE, location);
@@ -68,6 +87,39 @@ export const spacesRouter = router({
       }
     }),
 
+  myLocation: publicProcedure.query(async ({ ctx: { req, prisma } }) => {
+    try {
+      const jwt = req.headers?.authorization?.split(/\s/)[1];
+      const { id } = await verifyJwt(jwt as string);
+      const me = await prisma.user.findFirst({ where: { id } });
+      if (!!!me) {
+        return {
+          error: {
+            field: "user",
+            message: "The user can not be found.",
+          },
+        };
+      }
+      //
+      const location = await prisma.location.findFirst({
+        where: {
+          userId: me.id,
+        },
+        include: {
+          user: true,
+        },
+      });
+
+      return { location };
+    } catch (error) {
+      return {
+        error: {
+          message: "Unable to find the user for whatever reason",
+          field: "me",
+        },
+      };
+    }
+  }),
   leaveSpace: publicProcedure.mutation(async ({ ctx: { req, prisma } }) => {
     try {
       const jwt = req.headers?.authorization?.split(/\s/)[1];
@@ -127,7 +179,7 @@ export const spacesRouter = router({
             },
           },
         },
-        select: {
+        include: {
           user: true,
         },
       });

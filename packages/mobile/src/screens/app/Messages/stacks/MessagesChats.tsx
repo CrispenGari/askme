@@ -12,11 +12,15 @@ import {
 } from "../../../../components";
 import { Chat, Message, User } from "@askme/server";
 import { StateType } from "../../../../types";
+import JoinSpaceModal from "../../../../components/JoinSpaceModal/JoinSpaceModal";
 const MessagesChats: React.FunctionComponent<
   MessagesStackNavProps<"MessagesChats">
 > = ({ navigation }) => {
   const { user: me } = useSelector((state: StateType) => state);
   const { isLoading, data, refetch } = trpc.chats.allChats.useQuery();
+  const { data: myLocation } = trpc.spaces.myLocation.useQuery();
+  const [openJoinSpaceModal, setOpenJoinSpaceModal] = useState<boolean>(false);
+
   const [chats, setChats] = React.useState<
     Array<
       Chat & {
@@ -82,20 +86,21 @@ const MessagesChats: React.FunctionComponent<
       mounted = false;
     };
   }, [data]);
-  const { data: spaces, refetch: refetchSpaces } =
-    trpc.spaces.peopleInMySpace.useQuery({
-      userId: me?.id ?? "",
-    });
-  trpc.spaces.onUserJoinSpace.useSubscription(
-    { userId: me?.id ?? "" },
-    {
-      onData: async (data) => {
-        await refetchSpaces();
-      },
-    }
-  );
 
-  console.log(JSON.stringify({ spaces }, null, 2));
+  useEffect(() => {
+    let mounted: boolean = true;
+    if (mounted && !!myLocation) {
+      if (!!!myLocation.location) {
+        setOpenJoinSpaceModal(true);
+      }
+      if (myLocation.location?.lat === 0 && myLocation.location?.lon === 0) {
+        setOpenJoinSpaceModal(true);
+      }
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [myLocation]);
 
   return (
     <View style={{ flex: 1 }}>
@@ -106,6 +111,10 @@ const MessagesChats: React.FunctionComponent<
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
       >
+        <JoinSpaceModal
+          setOpen={setOpenJoinSpaceModal}
+          open={openJoinSpaceModal}
+        />
         <CloseActivePeople navigation={navigation} />
 
         {isLoading ? (

@@ -25,22 +25,9 @@ interface Props {
 }
 const ProfileLocation: React.FunctionComponent<Props> = ({ user }) => {
   const { granted } = useLocationPermission();
-  const { user: me } = useSelector((state: StateType) => state);
-  const [location, setLocation] = useState<Location.LocationObject>();
+  const { user: me, location } = useSelector((state: StateType) => state);
   const [currentReversedLocation, setCurrentReversedLocation] =
     useState<Location.LocationGeocodedAddress>();
-  useEffect(() => {
-    let mounted: boolean = true;
-    if (mounted && granted) {
-      (async () => {
-        const location = await Location.getCurrentPositionAsync();
-        setLocation(location);
-      })();
-    }
-    return () => {
-      mounted = false;
-    };
-  }, [granted]);
 
   React.useEffect(() => {
     let mounted: boolean = true;
@@ -48,8 +35,8 @@ const ProfileLocation: React.FunctionComponent<Props> = ({ user }) => {
       (async () => {
         if (granted && mounted && location) {
           const reversed = await Location.reverseGeocodeAsync({
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
+            latitude: location.latitude,
+            longitude: location.longitude,
           });
           setCurrentReversedLocation(reversed[0]);
         }
@@ -74,8 +61,8 @@ const ProfileLocation: React.FunctionComponent<Props> = ({ user }) => {
       {!!location ? (
         <MapView
           initialRegion={{
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
+            latitude: location.latitude,
+            longitude: location.longitude,
             latitudeDelta: 0.1,
             longitudeDelta: 0.1,
           }}
@@ -89,8 +76,8 @@ const ProfileLocation: React.FunctionComponent<Props> = ({ user }) => {
         >
           <Marker
             coordinate={{
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
+              latitude: location.latitude,
+              longitude: location.longitude,
             }}
           >
             <Callout style={{ backgroundColor: COLORS.tertiary }}>

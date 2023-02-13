@@ -16,7 +16,6 @@ const Messages: React.FunctionComponent<AppNavProps<"Messages">> = ({
 
   useLayoutEffect(() => {
     let mounted: boolean = true;
-
     if (mounted && !!unReadChats) {
       navigation.setOptions({
         tabBarBadge: unReadChats >= 9 ? `9+` : unReadChats,
