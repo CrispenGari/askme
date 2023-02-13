@@ -2,15 +2,13 @@ import { View, Text, TouchableOpacity, Modal } from "react-native";
 import React from "react";
 import { styles } from "../../styles";
 import { COLORS, relativeTimeObject } from "../../constants";
-import { useSelector } from "react-redux";
-import { StateType } from "../../types";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import updateLocal from "dayjs/plugin/updateLocale";
 import { CircularIndicator, CustomTextInput } from "..";
 import { MaterialIcons } from "@expo/vector-icons";
 import { trpc } from "../../utils/trpc";
-import { User } from "@askme/server";
+import { User, Location, Settings } from "@askme/server";
 dayjs.extend(relativeTime);
 dayjs.extend(updateLocal);
 
@@ -19,7 +17,13 @@ dayjs.updateLocale("en", {
 });
 
 interface Props {
-  user: Partial<User> | undefined;
+  user:
+    | (User & {
+        location: Location | null;
+        settings: Settings | null;
+      })
+    | null
+    | undefined;
   allowEdit: boolean;
 }
 const ProfileDetails: React.FunctionComponent<Props> = ({

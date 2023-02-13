@@ -1,12 +1,17 @@
-import { User } from "@askme/server";
-import * as Location from "expo-location";
+import { Settings, User, Location } from "@askme/server";
 export interface StateType {
   duid: string;
-  user?: Partial<User>;
+  user?:
+    | (User & {
+        location: Location | null;
+        settings: Settings | null;
+      })
+    | null;
   showAppTabs: boolean;
   unReadChats: number;
   openedChatId: string;
-  location: Location.LocationObjectCoords;
+  location: Location;
+  settings: Settings | null;
 }
 export interface ActionType<T> {
   payload: T;

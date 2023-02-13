@@ -13,7 +13,7 @@ import { COLORS } from "../../constants";
 import { styles } from "../../styles";
 import { CircularIndicator } from "..";
 import { trpc } from "../../utils/trpc";
-import { User } from "@askme/server";
+import { User, Location, Settings } from "@askme/server";
 const avatars: Array<string> = Array(20)
   .fill(null)
   .map(
@@ -24,7 +24,13 @@ const avatars: Array<string> = Array(20)
   );
 
 interface Props {
-  user: Partial<User> | undefined;
+  user:
+    | (User & {
+        location: Location | null;
+        settings: Settings | null;
+      })
+    | null
+    | undefined;
   allowEdit: boolean;
 }
 const ProfileAvatar: React.FunctionComponent<Props> = ({ user, allowEdit }) => {

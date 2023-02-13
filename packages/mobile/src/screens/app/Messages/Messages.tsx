@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState } from "react";
+import React, { useLayoutEffect, useState } from "react";
 import { AppNavProps, MessagesStackParamList } from "../../../params";
 import { createStackNavigator } from "@react-navigation/stack";
 import MessagesChats from "./stacks/MessagesChats";

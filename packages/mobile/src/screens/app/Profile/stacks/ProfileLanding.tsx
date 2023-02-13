@@ -34,7 +34,11 @@ const ProfileLanding: React.FunctionComponent<
   }, [user]);
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: COLORS.tertiary }}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: COLORS.tertiary }}
+      showsVerticalScrollIndicator={false}
+      showsHorizontalScrollIndicator={false}
+    >
       <ProfileAvatar allowEdit={true} user={user} />
       <ProfileDetails allowEdit={true} user={user} />
       <ProfileLocation user={user} />

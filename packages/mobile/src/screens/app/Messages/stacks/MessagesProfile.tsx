@@ -5,14 +5,16 @@ import ProfileDetails from "../../../../components/ProfileDetails/ProfileDetails
 import ProfileLocation from "../../../../components/ProfileLocation/ProfileLocation";
 import { FONTS, COLORS } from "../../../../constants";
 import { MessagesStackNavProps } from "../../../../params";
-import { User } from "@askme/server";
+import { User, Location } from "@askme/server";
 import { AppBackButton } from "../../../../components";
 import { styles } from "../../../../styles";
 
 const MessagesProfile: React.FunctionComponent<
   MessagesStackNavProps<"MessagesProfile">
 > = ({ route, navigation }) => {
-  const user: User = JSON.parse(route.params.user);
+  const user: User & {
+    location: Location;
+  } = JSON.parse(route.params.user);
 
   React.useLayoutEffect(() => {
     let mounted: boolean = true;

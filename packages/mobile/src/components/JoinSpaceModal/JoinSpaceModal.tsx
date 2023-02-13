@@ -7,7 +7,7 @@ import { useSelector } from "react-redux";
 import { StateType } from "../../types";
 import { trpc } from "../../utils/trpc";
 
-import MapView, { Callout, MapTypes, Marker } from "react-native-maps";
+import MapView, { Callout, Marker } from "react-native-maps";
 
 interface Props {
   open: boolean;

@@ -9,6 +9,7 @@ export const constants = {
   SET_CHAT_COUNT: "SET_CHAT_COUNT",
   SET_OPENED_CHAT_ID: "SET_OPENED_CHAT_ID",
   SET_MY_LOCATION: "SET_MY_LOCATION",
+  SET_USER_SETTINGS: "SET_USER_SETTINGS",
 };
 export const relativeTimeObject = {
   future: "in %s",

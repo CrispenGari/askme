@@ -18,7 +18,7 @@ import {
 } from "../../hooks";
 import { User, UserOnlineType } from "@askme/server";
 import { MessageType } from "@askme/server/src/types";
-import { setMyLocation } from "../../actions";
+import { setMyLocation, setUserSettings } from "../../actions";
 
 const Tab = createBottomTabNavigator<AppParamList>();
 const App = () => {
@@ -35,6 +35,8 @@ const App = () => {
   const [isOnline, setIsOnline] = React.useState<boolean>(
     appState.current === "active"
   );
+  const { data: mySettings } = trpc.settings.mySettings.useQuery();
+
   // notify others about my online state
   trpc.user.onUserOnline.useSubscription(
     { userId: user?.id ?? "" },
@@ -161,6 +163,15 @@ const App = () => {
       mounted = false;
     };
   }, [locationPermission, dispatch]);
+  React.useEffect(() => {
+    let mounted: boolean = true;
+    if (mounted && !!mySettings?.settings) {
+      dispatch(setUserSettings(mySettings.settings));
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [mySettings, dispatch]);
 
   return (
     <Tab.Navigator

@@ -1,4 +1,5 @@
 import { Events, __code__exp__, __code__prefix__ } from "../../constants";
+import haversine from "haversine-distance";
 import {
   confirmSchema,
   onAuthStateChangeSchema,
@@ -19,11 +20,19 @@ import {
   signJwt,
   verifyJwt,
   sendVerificationCodeAsEmail,
+  distanceToReadable,
 } from "../../utils";
 import { observable } from "@trpc/server/observable";
-import { User } from "@prisma/client";
+import { Settings, User, Location } from "@prisma/client";
 import EventEmitter from "events";
 import { UserOnlineType } from "../../types";
+
+type UserType =
+  | (User & {
+      location: Location | null;
+      settings: Settings | null;
+    })
+  | null;
 
 const ee = new EventEmitter({
   captureRejections: true,
@@ -50,6 +59,10 @@ export const userRouter = router({
           data: {
             bio,
             nickname,
+          },
+          include: {
+            location: true,
+            settings: true,
           },
         });
         ee.emit(Events.ON_PROFILE_DETAILS_UPDATE, user);
@@ -85,6 +98,10 @@ export const userRouter = router({
           data: {
             avatar,
           },
+          include: {
+            location: true,
+            settings: true,
+          },
         });
         ee.emit(Events.ON_PROFILE_DETAILS_UPDATE, user);
         return {
@@ -101,9 +118,9 @@ export const userRouter = router({
     }),
   onProfileDetailsUpdate: publicProcedure.subscription(() => {
     return observable<{
-      user: User;
+      user: UserType;
     }>((emit) => {
-      const handleEvent = (user: User) => {
+      const handleEvent = (user: UserType) => {
         emit.next({
           user,
         });
@@ -123,10 +140,10 @@ export const userRouter = router({
        * confirm the email correctly
        */
       return observable<{
-        user: User | null;
+        user: UserType;
         jwt: string;
       }>((emit) => {
-        const handleEvent = (user: User | null) => {
+        const handleEvent = (user: UserType) => {
           if (!!user) {
             if (user.id === userId) {
               // return jwt token and user is null
@@ -146,8 +163,8 @@ export const userRouter = router({
   onAuthStateChange: publicProcedure
     .input(onAuthStateChangeSchema)
     .subscription(({ input: { duid } }) => {
-      return observable<{ user: User | null; jwt: string } | null>((emit) => {
-        const handleEvent = async (user: User | null) => {
+      return observable<{ user: UserType; jwt: string } | null>((emit) => {
+        const handleEvent = async (user: UserType) => {
           if (!!user) {
             if (user.duid === duid) {
               const jwt = await signJwt(user);
@@ -168,7 +185,13 @@ export const userRouter = router({
       try {
         const jwt = req.headers?.authorization?.split(/\s/)[1];
         const { id } = await verifyJwt(jwt as string);
-        const user = await prisma.user.findFirst({ where: { id } });
+        const user = await prisma.user.findFirst({
+          where: { id },
+          include: {
+            location: true,
+            settings: true,
+          },
+        });
         ee.emit(Events.ON_AUTH_STATE_CHANGE, user);
         if (!!user) {
           return true;
@@ -190,12 +213,17 @@ export const userRouter = router({
           isOnline: false,
           isLoggedIn: false,
         },
+        include: {
+          settings: true,
+          location: true,
+        },
       });
+      ee.emit(Events.ON_AUTH_STATE_CHANGE, user);
       ee.emit(Events.USER_ONLINE, {
         user,
         status: "offline",
       } as UserOnlineType);
-      ee.emit(Events.ON_AUTH_STATE_CHANGE, user);
+
       return {
         user: null,
         jwt: "",
@@ -214,10 +242,57 @@ export const userRouter = router({
     try {
       const jwt = req.headers?.authorization?.split(/\s/)[1];
       const { id } = await verifyJwt(jwt as string);
-      const user = await prisma.user.findFirst({ where: { id } });
+      const user = await prisma.user.findFirst({
+        where: { id },
+        include: { settings: true, location: true },
+      });
       return {
         user,
       };
+    } catch (error) {
+      return {
+        error: {
+          message: "Unable to find the user for whatever reason",
+          field: "me",
+        },
+      };
+    }
+  }),
+  deleteAccount: publicProcedure.mutation(async ({ ctx: { prisma, req } }) => {
+    try {
+      const jwt = req.headers?.authorization?.split(/\s/)[1];
+      const { id } = await verifyJwt(jwt as string);
+      const user = await prisma.user.findFirst({ where: { id } });
+      if (!!!user) {
+        return {
+          error: {
+            message: "You are not authenticated",
+            field: "me",
+          },
+        };
+      }
+      const _user = await prisma.user.update({
+        where: { id },
+        data: {
+          isOnline: false,
+          isLoggedIn: false,
+        },
+        include: {
+          settings: true,
+          location: true,
+        },
+      });
+      ee.emit(Events.USER_ONLINE, {
+        user: _user,
+        status: "offline",
+      } as UserOnlineType);
+      await prisma.user.delete({
+        where: {
+          id: user.id,
+        },
+      });
+      ee.emit(Events.ON_AUTH_STATE_CHANGE, _user);
+      return true;
     } catch (error) {
       return {
         error: {
@@ -290,12 +365,36 @@ export const userRouter = router({
                 data: {
                   phoneNumber,
                   duid,
+                  settings: {
+                    create: {
+                      maxSpaceDistance: 3,
+                      enableNotifications: true,
+                    },
+                  },
+                  location: {
+                    create: {
+                      lat: 0,
+                      lon: 0,
+                    },
+                  },
                 },
               })
             : await prisma.user.create({
                 data: {
                   email,
                   duid,
+                  settings: {
+                    create: {
+                      maxSpaceDistance: 3,
+                      enableNotifications: true,
+                    },
+                  },
+                  location: {
+                    create: {
+                      lat: 0,
+                      lon: 0,
+                    },
+                  },
                 },
               });
           const value = JSON.stringify({
@@ -490,6 +589,10 @@ export const userRouter = router({
             data: {
               duid,
             },
+            include: {
+              location: true,
+              messages: true,
+            },
           });
           // new device authentication
           ee.emit(Events.ON_NEW_DEVICE_AUTHENTICATION, _user);
@@ -552,6 +655,10 @@ export const userRouter = router({
                   nickname,
                   avatar,
                 },
+                include: {
+                  location: true,
+                  settings: true,
+                },
               })
             : await prisma.user.update({
                 where: {
@@ -563,6 +670,10 @@ export const userRouter = router({
                   newUser: false,
                   nickname,
                   avatar,
+                },
+                include: {
+                  location: true,
+                  settings: true,
                 },
               });
 
@@ -598,6 +709,10 @@ export const userRouter = router({
           where: { id: user.id },
           data: {
             isOnline,
+          },
+          include: {
+            location: true,
+            settings: true,
           },
         });
         ee.emit(Events.USER_ONLINE, {
@@ -642,8 +757,11 @@ export const userRouter = router({
     try {
       const jwt = req.headers?.authorization?.split(/\s/)[1];
       const { id } = await verifyJwt(jwt as string);
-      const user = await prisma.user.findFirst({ where: { id } });
-      if (!!!user) return [];
+      const me = await prisma.user.findFirst({
+        where: { id },
+        include: { location: true, settings: true },
+      });
+      if (!!!me) return [];
       const users = await prisma.user.findMany({
         where: {
           NOT: {
@@ -653,8 +771,36 @@ export const userRouter = router({
         orderBy: {
           isOnline: "desc",
         },
+        include: {
+          location: true,
+          settings: true,
+        },
       });
-      return users;
+
+      return users
+        .map((user) => ({
+          ...user,
+          distance: haversine(
+            {
+              lat: me.location?.lat ?? 0,
+              lon: me.location?.lon ?? 0,
+            },
+            {
+              lat: user.location?.lat ?? 0,
+              lon: user.location?.lon ?? 0,
+            }
+          ),
+        }))
+        .filter((result) => {
+          if (me.settings?.maxSpaceDistance) {
+            return result.distance <= me.settings?.maxSpaceDistance * 1000;
+          }
+        })
+        .sort((a, b) => a.distance - b.distance)
+        .map((result) => ({
+          ...result,
+          distance: distanceToReadable(result.distance),
+        }));
     } catch (error) {
       return [];
     }

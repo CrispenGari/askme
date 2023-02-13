@@ -1,10 +1,11 @@
+import { Location } from "@askme/server";
 import { constants } from "../../constants";
 import { ActionType } from "../../types";
-import * as Location from "expo-location";
-export const locationReducer = (
-  state: Location.LocationObjectCoords | null = null,
 
-  { payload, type }: ActionType<Location.LocationObjectCoords>
+export const locationReducer = (
+  state: Location | null = null,
+
+  { payload, type }: ActionType<Location | null>
 ) => {
   switch (type) {
     case constants.SET_MY_LOCATION:

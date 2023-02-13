@@ -4,6 +4,12 @@ import jwt from "jsonwebtoken";
 import { client } from "../twilio";
 import nodemailer from "nodemailer";
 
+export const distanceToReadable = (distance: number) => {
+  if (distance === 0) return `0m`;
+  if (distance < 1000) return `${distance.toFixed(1)} m`;
+  return `${(distance / 1000).toFixed(1)} km`;
+};
+
 export type Coord = {
   lon: number;
   lat: number;

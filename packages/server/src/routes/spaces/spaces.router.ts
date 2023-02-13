@@ -160,7 +160,12 @@ export const spacesRouter = router({
     try {
       const jwt = req.headers?.authorization?.split(/\s/)[1];
       const { id } = await verifyJwt(jwt as string);
-      const me = await prisma.user.findFirst({ where: { id } });
+      const me = await prisma.user.findFirst({
+        where: { id },
+        include: {
+          location: true,
+        },
+      });
       if (!!!me) {
         return {
           error: {
@@ -176,6 +181,9 @@ export const spacesRouter = router({
             lat: 0,
             AND: {
               lon: 0,
+              AND: {
+                userId: me.id,
+              },
             },
           },
         },
@@ -184,7 +192,21 @@ export const spacesRouter = router({
         },
       });
 
-      return { spaces };
+      const _spaces = spaces.map((space) => ({
+        ...space,
+        distance: haversine(
+          {
+            lat: me.location?.lat ?? 0,
+            lon: me.location?.lon ?? 0,
+          },
+          {
+            lat: space.lat,
+            lon: space.lon,
+          }
+        ),
+      }));
+
+      return { spaces: _spaces };
     } catch (error) {
       return {
         error: {

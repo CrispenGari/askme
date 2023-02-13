@@ -14,7 +14,7 @@ import Auth from "./auth";
 const Routes = () => {
   const { duid } = useSelector((state: StateType) => state);
   const dispatch = useDispatch();
-  const { isLoading, data, mutate } = trpc.user.fetchUserOrFail.useMutation();
+  const { isLoading, mutate } = trpc.user.fetchUserOrFail.useMutation();
   const [user, setUser] = useState<User | null>(null);
   trpc.user.onAuthStateChange.useSubscription(
     { duid },

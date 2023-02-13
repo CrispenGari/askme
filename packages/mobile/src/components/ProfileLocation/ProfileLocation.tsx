@@ -1,6 +1,6 @@
 import { View, Text, Image } from "react-native";
-import React, { useEffect, useState } from "react";
-import MapView, { Callout, MapTypes, Marker } from "react-native-maps";
+import React, { useState } from "react";
+import MapView, { Callout, Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { useLocationPermission } from "../../hooks";
 import { useSelector } from "react-redux";
@@ -11,7 +11,9 @@ import updateLocal from "dayjs/plugin/updateLocale";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { CircularIndicator } from "..";
-import { User } from "@askme/server";
+import { User, Location as L, Settings } from "@askme/server";
+import { trpc } from "../../utils/trpc";
+import SpaceMarker from "../SpaceMarker/SpaceMarker";
 
 dayjs.extend(relativeTime);
 dayjs.extend(updateLocal);
@@ -21,22 +23,30 @@ dayjs.updateLocale("en", {
 });
 
 interface Props {
-  user: Partial<User> | undefined;
+  user:
+    | (User & {
+        location: L | null;
+        settings: Settings | null;
+      })
+    | null
+    | undefined;
 }
 const ProfileLocation: React.FunctionComponent<Props> = ({ user }) => {
   const { granted } = useLocationPermission();
-  const { user: me, location } = useSelector((state: StateType) => state);
+  const { user: me } = useSelector((state: StateType) => state);
   const [currentReversedLocation, setCurrentReversedLocation] =
     useState<Location.LocationGeocodedAddress>();
 
+  const { data } = trpc.spaces.mySpace.useQuery();
+
   React.useEffect(() => {
     let mounted: boolean = true;
-    if (mounted)
+    if (mounted && !!user?.location)
       (async () => {
-        if (granted && mounted && location) {
+        if (granted && mounted && !!user.location) {
           const reversed = await Location.reverseGeocodeAsync({
-            latitude: location.latitude,
-            longitude: location.longitude,
+            latitude: user?.location?.lat,
+            longitude: user?.location?.lon,
           });
           setCurrentReversedLocation(reversed[0]);
         }
@@ -44,7 +54,7 @@ const ProfileLocation: React.FunctionComponent<Props> = ({ user }) => {
     return () => {
       mounted = false;
     };
-  }, [location, granted]);
+  }, [granted, user]);
 
   return (
     <View
@@ -56,13 +66,15 @@ const ProfileLocation: React.FunctionComponent<Props> = ({ user }) => {
       }}
     >
       <Text style={[styles.h1, { fontSize: 25, marginBottom: 10 }]}>
-        {me?.id === user?.id ? "Your Space" : `${user?.nickname}'s Space`}
+        {me?.id === user?.id
+          ? `Your Space (${data?.spaces?.length} users)`
+          : `${user?.nickname}'s Space`}
       </Text>
-      {!!location ? (
+      {!!user?.location ? (
         <MapView
           initialRegion={{
-            latitude: location.latitude,
-            longitude: location.longitude,
+            latitude: user?.location.lat ?? 0,
+            longitude: user?.location.lon ?? 0,
             latitudeDelta: 0.1,
             longitudeDelta: 0.1,
           }}
@@ -76,8 +88,8 @@ const ProfileLocation: React.FunctionComponent<Props> = ({ user }) => {
         >
           <Marker
             coordinate={{
-              latitude: location.latitude,
-              longitude: location.longitude,
+              latitude: user?.location.lat ?? 0,
+              longitude: user?.location.lon ?? 0,
             }}
           >
             <Callout style={{ backgroundColor: COLORS.tertiary }}>
@@ -106,11 +118,15 @@ const ProfileLocation: React.FunctionComponent<Props> = ({ user }) => {
                   status:{" "}
                   {user?.isOnline
                     ? "active"
-                    : `last seen ${dayjs(user?.createdAt).fromNow()} ago`}
+                    : `last seen ${dayjs(user?.updatedAt).fromNow()} ago`}
                 </Text>
               </View>
             </Callout>
           </Marker>
+
+          {data?.spaces?.map((space) => (
+            <SpaceMarker key={space.id} space={space} />
+          ))}
         </MapView>
       ) : (
         <View

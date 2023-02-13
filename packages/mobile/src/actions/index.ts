@@ -1,6 +1,6 @@
-import { User } from "@askme/server";
+import { User, Settings, Location } from "@askme/server";
 import { constants } from "../constants";
-import * as Location from "expo-location";
+
 export const setDuid = (payload: string) => {
   return {
     type: constants.SET_DUID,
@@ -15,7 +15,14 @@ export const setUnReadChatsCount = (payload: number) => {
   };
 };
 
-export const setMyLocation = (payload: Location.LocationObjectCoords) => {
+export const setUserSettings = (payload: Settings) => {
+  return {
+    type: constants.SET_USER_SETTINGS,
+    payload,
+  };
+};
+
+export const setMyLocation = (payload: Location) => {
   return {
     type: constants.SET_MY_LOCATION,
     payload,

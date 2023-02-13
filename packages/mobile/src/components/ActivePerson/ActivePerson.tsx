@@ -5,7 +5,7 @@ import { COLORS } from "../../constants";
 import { styles } from "../../styles";
 
 interface Props {
-  user: User;
+  user: User & { distance: string };
   onPress?: () => void;
 }
 const ActivePerson: React.FunctionComponent<Props> = ({ user, onPress }) => {
@@ -39,6 +39,20 @@ const ActivePerson: React.FunctionComponent<Props> = ({ user, onPress }) => {
       activeOpacity={0.7}
       onPress={onPress}
     >
+      <Text
+        style={[
+          styles.p,
+          {
+            position: "absolute",
+            top: 3,
+            left: 5,
+            fontSize: 12,
+            color: "white",
+          },
+        ]}
+      >
+        {user.distance}
+      </Text>
       {user.isOnline ? (
         <Animated.View
           style={{

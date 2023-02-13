@@ -20,7 +20,7 @@ import { COLORS, FONTS } from "../../../../constants";
 import { styles } from "../../../../styles";
 import { useHeaderHeight } from "@react-navigation/elements";
 import Form from "../../../../components/Form/Form";
-import { Chat, Message, User } from "@askme/server";
+import { Chat, Location, Message, User } from "@askme/server";
 import { setOpenedChatId, setUnReadChatsCount } from "../../../../actions";
 import { StateType } from "../../../../types";
 import { EventArg } from "@react-navigation/native";
@@ -32,7 +32,9 @@ const MessagesChat: React.FunctionComponent<
     []
   );
   const scrollViewRef = React.useRef<React.LegacyRef<ScrollView> | any>();
-  const friend: User = JSON.parse(route.params.friend);
+  const friend: User & {
+    location: Location;
+  } = JSON.parse(route.params.friend);
   const chat: Chat = JSON.parse(route.params.chat);
   const { user } = useSelector((state: StateType) => state);
   const dispatch = useDispatch();

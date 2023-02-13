@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 import React from "react";
 import { COLORS } from "../../constants";
 import { styles } from "../../styles";
@@ -18,11 +18,11 @@ interface Props {
   >;
 }
 const CloseActivePeople: React.FunctionComponent<Props> = ({ navigation }) => {
-  const [closeActivePeople, setCloseActivePeople] = React.useState<Array<User>>(
-    []
-  );
+  const [closeActivePeople, setCloseActivePeople] = React.useState<
+    Array<User & { distance: string }>
+  >([]);
   const { user } = useSelector((state: StateType) => state);
-  const { data, isLoading, refetch } = trpc.user.users.useQuery();
+  const { data, refetch } = trpc.user.users.useQuery();
 
   const { mutate, data: chat } = trpc.chats.initializeChat.useMutation({});
   const [friend, setFriend] = React.useState<User | undefined>();

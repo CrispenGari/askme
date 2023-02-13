@@ -125,12 +125,17 @@ export const chatsRouter = router({
           },
           include: {
             users: {
-              select: {
-                user: true,
+              include: {
+                user: {
+                  include: {
+                    location: true,
+                    settings: true,
+                  },
+                },
               },
             },
             messages: {
-              select: {
+              include: {
                 sender: true,
               },
             },
@@ -223,8 +228,13 @@ export const chatsRouter = router({
             },
           },
           users: {
-            select: {
-              user: true,
+            include: {
+              user: {
+                include: {
+                  location: true,
+                  settings: true,
+                },
+              },
             },
             where: {
               NOT: {
