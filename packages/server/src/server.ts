@@ -40,5 +40,5 @@ fastify.listen({ port: PORT, host: HOST }, (error, address) => {
     fastify.log.error(error);
     process.exit(1);
   }
-  fastify.log.info(` Server is now listening on ${address}`);
+  console.log(` Server is now listening on ${address}`);
 });

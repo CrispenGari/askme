@@ -60,7 +60,7 @@ const App = () => {
     }
   );
   const { mutate } = trpc.user.updateUserStateAndNotify.useMutation();
-  const { mutate: mutateJoinSpace } = trpc.spaces.joinSpace.useMutation();
+
   React.useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextAppState) => {
       setIsOnline(nextAppState === "active");
@@ -84,24 +84,15 @@ const App = () => {
 
   React.useEffect(() => {
     let mounted: boolean = true;
-    if (mounted && locationPermission) {
+    if (mounted) {
       (async () => {
-        const location = await Location.getCurrentPositionAsync();
-        if (!!location && !!user?.id) {
-          await mutateJoinSpace({
-            userId: user.id,
-            coodinates: {
-              lat: location.coords.latitude,
-              lon: location.coords.longitude,
-            },
-          });
-        }
+        await mutate({ isOnline });
       })();
     }
     return () => {
       mounted = false;
     };
-  }, [locationPermission]);
+  }, [isOnline]);
 
   React.useEffect(() => {
     let mounted: boolean = true;

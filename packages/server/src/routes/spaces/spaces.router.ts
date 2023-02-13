@@ -1,66 +1,156 @@
 import {
   joinSpaceSchema,
-  leaveSpaceSchema,
   onUserJoinSpaceSchema,
-  peopleInMySpaceSchema,
+  onUserLeaveSpaceSchema,
 } from "../../schema/spaces.schema";
 import { publicProcedure, router } from "../../trpc/trpc";
 import haversine from "haversine-distance";
 import { Events } from "../../constants";
 import { observable } from "@trpc/server/observable";
 import EventEmitter from "events";
+import { verifyJwt } from "../../utils";
+import { User } from "@prisma/client";
 
-let spaces: Array<{
+interface SpaceType {
+  user: User;
+  id: string;
+  lat: number;
+  lon: number;
   userId: string;
-  coodinates: {
-    lat: number;
-    lon: number;
-  };
-}> = [];
+}
 
 const ee = new EventEmitter({
   captureRejections: true,
 });
 export const spacesRouter = router({
-  joinSpace: publicProcedure.input(joinSpaceSchema).mutation(({ input }) => {
-    spaces.push(input);
-    spaces = spaces.filter(
-      (value, index, self) =>
-        index === self.findIndex((t) => t.userId === value.userId)
-    );
-    ee.emit(Events.ON_USER_JOIN_SPACE, spaces);
-    return spaces;
-  }),
-
-  leaveSpace: publicProcedure
-    .input(leaveSpaceSchema)
-    .mutation(({ input: { userId } }) => {
-      spaces = spaces.filter((s) => s.userId !== userId);
-      return spaces;
+  joinSpace: publicProcedure
+    .input(joinSpaceSchema)
+    .mutation(async ({ input: { lat, lon }, ctx: { prisma, req } }) => {
+      try {
+        const jwt = req.headers?.authorization?.split(/\s/)[1];
+        const { id } = await verifyJwt(jwt as string);
+        const me = await prisma.user.findFirst({ where: { id } });
+        if (!!!me) {
+          return {
+            error: {
+              field: "user",
+              message: "The user can not be found.",
+            },
+          };
+        }
+        const location = await prisma.location.create({
+          data: {
+            lat,
+            lon,
+            user: {
+              connect: {
+                id: me.id,
+              },
+            },
+          },
+          select: {
+            user: true,
+            id: true,
+            lat: true,
+            lon: true,
+            userId: true,
+          },
+        });
+        ee.emit(Events.ON_USER_JOIN_SPACE, location);
+        return { location };
+      } catch (error) {
+        return {
+          error: {
+            message: "Unable to find the user for whatever reason",
+            field: "me",
+          },
+        };
+      }
     }),
+
+  leaveSpace: publicProcedure.mutation(async ({ ctx: { req, prisma } }) => {
+    try {
+      const jwt = req.headers?.authorization?.split(/\s/)[1];
+      const { id } = await verifyJwt(jwt as string);
+      const me = await prisma.user.findFirst({ where: { id } });
+      if (!!!me) {
+        return {
+          error: {
+            field: "user",
+            message: "The user can not be found.",
+          },
+        };
+      }
+      const location = await prisma.location.update({
+        where: {
+          userId: me.id,
+        },
+        data: {
+          lat: 0,
+          lon: 0,
+        },
+        select: {
+          user: true,
+        },
+      });
+      ee.emit(Events.ON_USER_LEAVE_SPACE, location);
+      return { location };
+    } catch (error) {
+      return {
+        error: {
+          message: "Unable to find the user for whatever reason",
+          field: "me",
+        },
+      };
+    }
+  }),
+  mySpace: publicProcedure.query(async ({ ctx: { req, prisma } }) => {
+    try {
+      const jwt = req.headers?.authorization?.split(/\s/)[1];
+      const { id } = await verifyJwt(jwt as string);
+      const me = await prisma.user.findFirst({ where: { id } });
+      if (!!!me) {
+        return {
+          error: {
+            field: "user",
+            message: "The user can not be found.",
+          },
+        };
+      }
+      //
+      const spaces = await prisma.location.findMany({
+        where: {
+          NOT: {
+            lat: 0,
+            AND: {
+              lon: 0,
+            },
+          },
+        },
+        select: {
+          user: true,
+        },
+      });
+
+      return { spaces };
+    } catch (error) {
+      return {
+        error: {
+          message: "Unable to find the user for whatever reason",
+          field: "me",
+        },
+      };
+    }
+  }),
 
   onUserJoinSpace: publicProcedure
     .input(onUserJoinSpaceSchema)
     .subscription(async ({ input: { userId } }) => {
-      return observable<
-        Array<{
-          userId: string;
-          coodinates: {
-            lat: number;
-            lon: number;
-          };
-        }>
-      >((emit) => {
-        const onMessage = (
-          spaces: Array<{
-            userId: string;
-            coodinates: {
-              lat: number;
-              lon: number;
-            };
-          }>
-        ) => {
-          emit.next(spaces.filter((s) => s.userId !== userId));
+      return observable<SpaceType>((emit) => {
+        const onMessage = (space: SpaceType) => {
+          if (userId !== space.userId) {
+            emit.next(space);
+          }
         };
         ee.on(Events.ON_USER_JOIN_SPACE, onMessage);
         return () => {
@@ -69,19 +159,19 @@ export const spacesRouter = router({
       });
     }),
 
-  peopleInMySpace: publicProcedure
-    .input(peopleInMySpaceSchema)
-    .query(({ input: { userId } }) => {
-      const me = spaces.find((s) => s.userId === userId);
-      if (!!!me) return [];
-      const others = spaces.filter((s) => s.userId !== userId);
-      if (others.length === 0) return [];
-
-      return spaces
-        .filter((s) => s.userId !== userId)
-        .map((space) => ({
-          ...space,
-          distance: haversine(me.coodinates, space.coodinates), // in meters
-        }));
+  onUserLeaveSpace: publicProcedure
+    .input(onUserLeaveSpaceSchema)
+    .subscription(async ({ input: { userId } }) => {
+      return observable<SpaceType>((emit) => {
+        const onMessage = (space: SpaceType) => {
+          if (userId !== space.userId) {
+            emit.next(space);
+          }
+        };
+        ee.on(Events.ON_USER_LEAVE_SPACE, onMessage);
+        return () => {
+          ee.off(Events.ON_USER_LEAVE_SPACE, onMessage);
+        };
+      });
     }),
 });
