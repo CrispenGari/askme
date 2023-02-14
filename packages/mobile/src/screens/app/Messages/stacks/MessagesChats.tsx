@@ -71,7 +71,7 @@ const MessagesChats: React.FunctionComponent<
             updatedAt,
             userToUserChatId,
           }) => ({
-            friend: users[0].user,
+            friend: users[0]?.user,
             lastMessage: messages[0],
             chatName,
             createdAt,

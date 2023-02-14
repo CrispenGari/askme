@@ -9,8 +9,6 @@ import { styles } from "../../../styles";
 import { getDUID, setDUID } from "../../../utils";
 import { useDispatch } from "react-redux";
 import { setDuid } from "../../../actions";
-import Circular from "../../../components/CircularIndicator/CircularIndicator";
-import { trpc } from "../../../utils/trpc";
 import { Footer } from "../../../components";
 const Welcome: React.FunctionComponent<AuthNavProps<"Welcome">> = ({
   navigation,

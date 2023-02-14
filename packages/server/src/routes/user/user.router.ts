@@ -4,7 +4,6 @@ import {
   confirmSchema,
   onAuthStateChangeSchema,
   onNewDeviceAuthenticationSchema,
-  onNewUserJoinedSchema,
   onUserOnlineSchema,
   profileSchema,
   registerSchema,
@@ -679,6 +678,7 @@ export const userRouter = router({
 
           const jwt: string = await signJwt(_user);
           ee.emit(Events.ON_AUTH_STATE_CHANGE, _user);
+
           if (newUser) {
             ee.emit(Events.ON_NEW_USER_JOINED, _user);
           }

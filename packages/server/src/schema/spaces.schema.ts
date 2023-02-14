@@ -10,3 +10,6 @@ export const onUserJoinSpaceSchema = z.object({
 export const onUserLeaveSpaceSchema = z.object({
   userId: z.string(),
 });
+export const userSpaceSchema = z.object({
+  userId: z.string(),
+});

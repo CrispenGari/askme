@@ -2,13 +2,14 @@ import {
   joinSpaceSchema,
   onUserJoinSpaceSchema,
   onUserLeaveSpaceSchema,
+  userSpaceSchema,
 } from "../../schema/spaces.schema";
 import { publicProcedure, router } from "../../trpc/trpc";
 import haversine from "haversine-distance";
 import { Events } from "../../constants";
 import { observable } from "@trpc/server/observable";
 import EventEmitter from "events";
-import { verifyJwt } from "../../utils";
+import { distanceToReadable, verifyJwt } from "../../utils";
 import { User } from "@prisma/client";
 
 interface SpaceType {
@@ -156,75 +157,84 @@ export const spacesRouter = router({
       };
     }
   }),
-  mySpace: publicProcedure.query(async ({ ctx: { req, prisma } }) => {
-    try {
-      const jwt = req.headers?.authorization?.split(/\s/)[1];
-      const { id } = await verifyJwt(jwt as string);
-      const me = await prisma.user.findFirst({
-        where: { id },
-        include: {
-          location: true,
-        },
-      });
-      if (!!!me) {
-        return {
-          error: {
-            field: "user",
-            message: "The user can not be found.",
+  userSpace: publicProcedure
+    .input(userSpaceSchema)
+    .query(async ({ ctx: { prisma }, input: { userId } }) => {
+      try {
+        const me = await prisma.user.findFirst({
+          where: { id: userId },
+          include: {
+            location: true,
+            settings: true,
           },
-        };
-      }
-      //
-      const spaces = await prisma.location.findMany({
-        where: {
-          NOT: {
-            lat: 0,
-            AND: {
-              lon: 0,
+        });
+        if (!!!me) {
+          return {
+            error: {
+              field: "user",
+              message: "The user can not be found.",
+            },
+          };
+        }
+        //
+        const spaces = await prisma.location.findMany({
+          where: {
+            NOT: {
+              lat: 0,
               AND: {
-                userId: me.id,
+                lon: 0,
+                AND: {
+                  userId: me.id,
+                },
               },
             },
           },
-        },
-        include: {
-          user: true,
-        },
-      });
-
-      const _spaces = spaces.map((space) => ({
-        ...space,
-        distance: haversine(
-          {
-            lat: me.location?.lat ?? 0,
-            lon: me.location?.lon ?? 0,
+          include: {
+            user: true,
           },
-          {
-            lat: space.lat,
-            lon: space.lon,
-          }
-        ),
-      }));
+        });
+        const _spaces = spaces
+          .map((space) => ({
+            ...space,
+            distance: haversine(
+              {
+                lat: me.location?.lat ?? 0,
+                lon: me.location?.lon ?? 0,
+              },
+              {
+                lat: space.lat,
+                lon: space.lon,
+              }
+            ),
+          }))
+          .filter((result) => {
+            if (me.settings?.maxSpaceDistance) {
+              return result.distance <= me.settings?.maxSpaceDistance * 1000;
+            }
+          })
+          .sort((a, b) => a.distance - b.distance)
+          .map((result) => ({
+            ...result,
+            distance: distanceToReadable(result.distance),
+          }));
 
-      return { spaces: _spaces };
-    } catch (error) {
-      return {
-        error: {
-          message: "Unable to find the user for whatever reason",
-          field: "me",
-        },
-      };
-    }
-  }),
+        return { spaces: _spaces };
+      } catch (error) {
+        return {
+          error: {
+            message: "Unable to find the user for whatever reason",
+            field: "me",
+          },
+        };
+      }
+    }),
 
   onUserJoinSpace: publicProcedure
     .input(onUserJoinSpaceSchema)
     .subscription(async ({ input: { userId } }) => {
       return observable<SpaceType>((emit) => {
         const onMessage = (space: SpaceType) => {
-          if (userId !== space.userId) {
-            emit.next(space);
-          }
+          emit.next(space);
         };
         ee.on(Events.ON_USER_JOIN_SPACE, onMessage);
         return () => {

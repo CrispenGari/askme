@@ -43,7 +43,7 @@ fastify.register(fastifyTRPCPlugin, {
 
 fastify.listen({ port: PORT, host: HOST }, (error, address) => {
   if (error) {
-    fastify.log.error(error);
+    console.log(error);
     process.exit(1);
   }
   console.log(` Server is now listening on ${address}`);

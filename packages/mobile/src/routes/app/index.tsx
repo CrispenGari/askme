@@ -27,7 +27,7 @@ const App = () => {
   const [newUserJoin, setNewUserJoined] = useState<User | null>(null);
   const [newMsg, setNewMsg] = useState<MessageType | undefined>(undefined);
   const { granted: locationPermission } = useLocationPermission();
-  const { granted: sensorsPermission } = useSensorsPermission({});
+  // const { granted: sensorsPermission } = useSensorsPermission({});
   const { token } = useNotificationsToken({});
   const dispatch = useDispatch();
 
@@ -138,11 +138,13 @@ const App = () => {
     if (mounted && !!newUserJoin && !!token && user?.id) {
       (async () => {
         if (user.id !== newUserJoin.id) {
-          await sendPushNotification(
-            token,
-            `askme - @${newUserJoin.nickname}`,
-            `${newUserJoin.nickname} just joined and is in your space.`
-          );
+          if (user.settings?.enableNotifications) {
+            await sendPushNotification(
+              token,
+              `askme - @${newUserJoin.nickname}`,
+              `${newUserJoin.nickname} just joined hopefully they are in your space.`
+            );
+          }
         }
       })();
     }

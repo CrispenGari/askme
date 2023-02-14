@@ -40,6 +40,22 @@ const CloseActivePeople: React.FunctionComponent<Props> = ({ navigation }) => {
       },
     }
   );
+  trpc.spaces.onUserJoinSpace.useSubscription(
+    { userId: user?.id ?? "" },
+    {
+      onData: async (data) => {
+        await refetch();
+      },
+    }
+  );
+  trpc.spaces.onUserLeaveSpace.useSubscription(
+    { userId: user?.id ?? "" },
+    {
+      onData: async (data) => {
+        await refetch();
+      },
+    }
+  );
 
   React.useEffect(() => {
     let mounted: boolean = true;

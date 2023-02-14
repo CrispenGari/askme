@@ -39,9 +39,9 @@ const ProfileLanding: React.FunctionComponent<
       showsVerticalScrollIndicator={false}
       showsHorizontalScrollIndicator={false}
     >
-      <ProfileAvatar allowEdit={true} user={user} />
-      <ProfileDetails allowEdit={true} user={user} />
-      <ProfileLocation user={user} />
+      <ProfileAvatar allowEdit={true} user={user as any} />
+      <ProfileDetails allowEdit={true} user={user as any} />
+      <ProfileLocation user={user as any} />
       <ProfileManageSpace />
       <ProfileLogout />
       <View style={{ height: 50 }} />

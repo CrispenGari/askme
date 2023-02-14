@@ -17,7 +17,7 @@ dayjs.updateLocale("en", {
 
 interface Props {
   space: {
-    distance: number;
+    distance: string;
     id: string;
     lat: number;
     lon: number;
@@ -43,6 +43,9 @@ const SpaceMarker: React.FunctionComponent<Props> = ({ space }) => {
             backgroundColor: COLORS.tertiary,
           }}
         >
+          <Text style={[styles.p, { color: "gray", marginBottom: 2 }]}>
+            {`${space.distance} away`}
+          </Text>
           <Image
             style={{
               width: 60,

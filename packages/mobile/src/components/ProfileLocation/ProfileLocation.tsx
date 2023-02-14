@@ -4,7 +4,7 @@ import MapView, { Callout, Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { useLocationPermission } from "../../hooks";
 import { useSelector } from "react-redux";
-import { COLORS, FONTS, relativeTimeObject } from "../../constants";
+import { COLORS, relativeTimeObject } from "../../constants";
 import { StateType } from "../../types";
 import { styles } from "../../styles";
 import updateLocal from "dayjs/plugin/updateLocale";
@@ -37,7 +37,26 @@ const ProfileLocation: React.FunctionComponent<Props> = ({ user }) => {
   const [currentReversedLocation, setCurrentReversedLocation] =
     useState<Location.LocationGeocodedAddress>();
 
-  const { data } = trpc.spaces.mySpace.useQuery();
+  const { data, refetch } = trpc.spaces.userSpace.useQuery({
+    userId: user?.id ?? "",
+  });
+
+  trpc.spaces.onUserJoinSpace.useSubscription(
+    { userId: user?.id ?? "" },
+    {
+      onData: async (data) => {
+        await refetch();
+      },
+    }
+  );
+  trpc.spaces.onUserLeaveSpace.useSubscription(
+    { userId: user?.id ?? "" },
+    {
+      onData: async (data) => {
+        await refetch();
+      },
+    }
+  );
 
   React.useEffect(() => {
     let mounted: boolean = true;
@@ -68,7 +87,7 @@ const ProfileLocation: React.FunctionComponent<Props> = ({ user }) => {
       <Text style={[styles.h1, { fontSize: 25, marginBottom: 10 }]}>
         {me?.id === user?.id
           ? `Your Space (${data?.spaces?.length} users)`
-          : `${user?.nickname}'s Space`}
+          : `(${data?.spaces?.length} users) in ${user?.nickname}'s Space`}
       </Text>
       {!!user?.location ? (
         <MapView

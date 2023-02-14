@@ -80,8 +80,8 @@ const SettingsLanding: React.FunctionComponent<
       showsVerticalScrollIndicator={false}
       showsHorizontalScrollIndicator={false}
     >
-      <ProfileAvatar allowEdit={false} user={user} />
-      <ProfileDetails allowEdit={false} user={user} />
+      <ProfileAvatar allowEdit={false} user={user as any} />
+      <ProfileDetails allowEdit={false} user={user as any} />
       <Text
         style={[
           styles.h1,
