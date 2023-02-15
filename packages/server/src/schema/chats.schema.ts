@@ -14,3 +14,7 @@ export const userTypingSchema = z.object({
   userId: z.string(),
   typing: z.boolean(),
 });
+
+export const pinChatSchema = z.object({
+  chatId: z.string(),
+});

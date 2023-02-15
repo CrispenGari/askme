@@ -60,6 +60,8 @@ model Chat {
 
   userToUserChatId String?
 
+  pinned Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

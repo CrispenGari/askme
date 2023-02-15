@@ -1,20 +1,12 @@
 version: "3.9"
 services:
-  redisdb:
-    image: redis:7.0.8-alpine
-    restart: always
-    ports:
-      - 6379:6379
-    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
-    volumes:
-      - redisdb:/data
   postgres:
     image: postgres:14.4-alpine
     container_name: postgres
     restart: always
     volumes:
       - ./db/init.sql:/docker-entrypoint-initdb.d/0_init.sql
-      - /database:/var/lib/postgresql/data
+      - postgress_data:/var/lib/postgresql/data
     ports:
       - 5432:5432
     expose:
@@ -24,13 +16,24 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
       SERVICE_TAGS: dev
-
+    networks:
+      - internalnet
+  redis:
+    image: redis:6.2.7-alpine
+    container_name: rediscontainer
+    volumes:
+      - redis_data:/data
+    ports:
+      - 6379:6379
+    expose:
+      - 6379
+    networks:
+      - internalnet
 networks:
-  bridge:
-    external: true
-    name: bridge
+  internalnet:
+    driver: bridge
 volumes:
-  postgresdb:
-    driver: local
-  redisdb:
-    driver: local
+  redis_data:
+    external: false
+  postgress_data:
+    external: false

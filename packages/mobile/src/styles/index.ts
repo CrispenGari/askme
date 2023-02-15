@@ -10,6 +10,10 @@ export const styles = StyleSheet.create({
     fontFamily: FONTS.regularBold,
     fontSize: 20,
   },
+  h2: {
+    fontFamily: FONTS.regularBold,
+    fontSize: 16,
+  },
 
   button__text: {
     color: "white",
