@@ -11,6 +11,13 @@ import {
   openMessagesSchema,
   countUnOpenedMessagesSchema,
   onReadMessagesSchema,
+  reactToMessageSchema,
+  onMessageReactionSchema,
+  unSendMessageSchema,
+  deleteMessageSchema,
+  onDeleteMessageSchema,
+  onUnSendMessageSchema,
+  onMessageReactionNotificationSchema,
 } from "../../schema/messages.schema";
 import EventEmitter from "events";
 import { verifyJwt } from "../../utils";
@@ -21,6 +28,103 @@ const ee = new EventEmitter({
   captureRejections: true,
 });
 export const messagesRouter = router({
+  reactToMessage: publicProcedure
+    .input(reactToMessageSchema)
+    .mutation(async ({ ctx: { prisma, req }, input: { messageId } }) => {
+      try {
+        const jwt = req.headers?.authorization?.split(/\s/)[1];
+        const { id } = await verifyJwt(jwt as string);
+        const me = await prisma.user.findFirst({ where: { id } });
+        if (!!!me) return false;
+        const _message = await prisma.message.findFirst({
+          where: {
+            id: messageId,
+          },
+        });
+        if (!!!_message) return false;
+
+        if (me.id === _message.userId) return false;
+
+        const message = await prisma.message.update({
+          where: {
+            id: _message.id,
+          },
+          data: {
+            liked: !_message.liked,
+          },
+        });
+        ee.emit(Events.ON_MESSAGE_REACTION, message);
+
+        ee.emit(Events.ON_MESSAGE_REACTION_NOTIFICATION, {
+          message,
+          reactor: me,
+        });
+        return true;
+      } catch (error) {
+        return false;
+      }
+    }),
+
+  unSendMessage: publicProcedure
+    .input(unSendMessageSchema)
+    .mutation(async ({ ctx: { prisma, req }, input: { messageId } }) => {
+      try {
+        const jwt = req.headers?.authorization?.split(/\s/)[1];
+        const { id } = await verifyJwt(jwt as string);
+        const me = await prisma.user.findFirst({ where: { id } });
+        if (!!!me) return false;
+        const _message = await prisma.message.findFirst({
+          where: {
+            id: messageId,
+          },
+        });
+        if (!!!_message) return false;
+
+        if (me.id !== _message.userId) return false;
+
+        const message = await prisma.message.update({
+          where: {
+            id: _message.id,
+          },
+          data: {
+            message: "",
+          },
+        });
+        ee.emit(Events.ON_UN_SEND_MESSAGE, message);
+        return true;
+      } catch (error) {
+        return false;
+      }
+    }),
+  deleteMessage: publicProcedure
+    .input(deleteMessageSchema)
+    .mutation(async ({ ctx: { prisma, req }, input: { messageId } }) => {
+      try {
+        const jwt = req.headers?.authorization?.split(/\s/)[1];
+        const { id } = await verifyJwt(jwt as string);
+        const me = await prisma.user.findFirst({ where: { id } });
+        if (!!!me) return false;
+        const _message = await prisma.message.findFirst({
+          where: {
+            id: messageId,
+          },
+        });
+        if (!!!_message) return false;
+
+        if (me.id !== _message.userId) return false;
+
+        const message = await prisma.message.delete({
+          where: {
+            id: _message.id,
+          },
+        });
+        ee.emit(Events.ON_DELETE_MESSAGE, _message);
+        return true;
+      } catch (error) {
+        return false;
+      }
+    }),
+
   countUnOpenedMessages: publicProcedure
     .input(countUnOpenedMessagesSchema)
     .query(async ({ ctx: { prisma, req }, input: { chatId } }) => {
@@ -290,6 +394,72 @@ export const messagesRouter = router({
         ee.on(Events.ON_READ_MESSAGES, handler);
         return () => {
           ee.off(Events.ON_READ_MESSAGES, handler);
+        };
+      });
+    }),
+  onMessageReaction: publicProcedure
+    .input(onMessageReactionSchema)
+    .subscription(async ({ input: { chatId } }) => {
+      return observable<Message>((emit) => {
+        const handler = (msg: Message) => {
+          if (chatId === msg.chatId) {
+            emit.next(msg);
+          }
+        };
+        ee.on(Events.ON_MESSAGE_REACTION, handler);
+        return () => {
+          ee.off(Events.ON_MESSAGE_REACTION, handler);
+        };
+      });
+    }),
+
+  onMessageReactionNotification: publicProcedure
+    .input(onMessageReactionNotificationSchema)
+    .subscription(async ({ input: { userId } }) => {
+      return observable<{
+        message: Message;
+        reactor: User;
+      }>((emit) => {
+        const handler = (data: { message: Message; reactor: User }) => {
+          if (userId === data.message.userId) {
+            emit.next(data);
+          }
+        };
+        ee.on(Events.ON_MESSAGE_REACTION_NOTIFICATION, handler);
+        return () => {
+          ee.off(Events.ON_MESSAGE_REACTION_NOTIFICATION, handler);
+        };
+      });
+    }),
+
+  onDeleteMessage: publicProcedure
+    .input(onDeleteMessageSchema)
+    .subscription(async ({ input: { chatId } }) => {
+      return observable<Message>((emit) => {
+        const handler = (msg: Message) => {
+          if (msg.chatId === chatId) {
+            emit.next(msg);
+          }
+        };
+        ee.on(Events.ON_DELETE_MESSAGE, handler);
+        return () => {
+          ee.off(Events.ON_DELETE_MESSAGE, handler);
+        };
+      });
+    }),
+
+  onUnSendMessage: publicProcedure
+    .input(onUnSendMessageSchema)
+    .subscription(async ({ input: { chatId } }) => {
+      return observable<Message>((emit) => {
+        const handler = (msg: Message) => {
+          if (msg.chatId === chatId) {
+            emit.next(msg);
+          }
+        };
+        ee.on(Events.ON_UN_SEND_MESSAGE, handler);
+        return () => {
+          ee.off(Events.ON_UN_SEND_MESSAGE, handler);
         };
       });
     }),

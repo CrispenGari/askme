@@ -55,6 +55,37 @@ const ChatComponent: React.FunctionComponent<Props> = ({
       },
     }
   );
+  trpc.messages.onUnSendMessage.useSubscription(
+    { chatId: chat.id },
+    {
+      onData: async (data) => {
+        await refetch();
+        await refetchReads();
+        await refetchChatsCount();
+      },
+    }
+  );
+  trpc.messages.onDeleteMessage.useSubscription(
+    { chatId: chat.id },
+    {
+      onData: async (data) => {
+        await refetch();
+        await refetchReads();
+        await refetchChatsCount();
+      },
+    }
+  );
+
+  trpc.messages.onMessageReaction.useSubscription(
+    { chatId: chat.id },
+    {
+      onData: async (data) => {
+        await refetch();
+        await refetchReads();
+        await refetchChatsCount();
+      },
+    }
+  );
 
   trpc.messages.onNewMessage.useSubscription(
     { uid: user?.id ?? "" },

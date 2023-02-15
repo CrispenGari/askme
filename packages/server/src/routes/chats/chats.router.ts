@@ -226,6 +226,11 @@ export const chatsRouter = router({
             orderBy: {
               createdAt: "desc",
             },
+            where: {
+              message: {
+                not: "",
+              },
+            },
           },
           users: {
             include: {

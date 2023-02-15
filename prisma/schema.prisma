@@ -85,6 +85,7 @@ model Message {
 
   message String
   read Boolean @default(false)
+  liked Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

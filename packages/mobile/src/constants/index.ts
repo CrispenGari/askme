@@ -1,6 +1,6 @@
 import { Dimensions } from "react-native";
 
-export const severDomain: string = `3183-197-98-127-119.ngrok.io`;
+export const severDomain: string = `b0f7-197-98-127-119.ngrok.io`;
 export const messagesLimit: number = 10;
 export const constants = {
   SET_DUID: "SET_DUID",
@@ -34,6 +34,7 @@ export const COLORS = {
   secondary: "#E4CDA7",
   tertiary: "#FFE6BC",
   blue: "#1D9AF1",
+  red: "#FF3953",
 };
 
 export const SCREEN_WIDTH: number = Dimensions.get("screen").width;

@@ -24,6 +24,7 @@ import { Chat, Location, Message, User } from "@askme/server";
 import { setOpenedChatId, setUnReadChatsCount } from "../../../../actions";
 import { StateType } from "../../../../types";
 import { EventArg } from "@react-navigation/native";
+import InChatModal from "../../../../components/InChatModal/InChatModal";
 
 const MessagesChat: React.FunctionComponent<
   MessagesStackNavProps<"MessagesChat">
@@ -45,6 +46,36 @@ const MessagesChat: React.FunctionComponent<
   const { data, isLoading, refetch } = trpc.messages.chatMessages.useQuery({
     chatId: chat.id,
   });
+  const [open, setOpen] = useState<boolean>(false);
+  const [selectedMessage, setSelectedMessage] = React.useState<Message | null>(
+    null
+  );
+
+  trpc.messages.onUnSendMessage.useSubscription(
+    { chatId: chat.id },
+    {
+      onData: async (data) => {
+        await refetch();
+      },
+    }
+  );
+  trpc.messages.onDeleteMessage.useSubscription(
+    { chatId: chat.id },
+    {
+      onData: async (data) => {
+        await refetch();
+      },
+    }
+  );
+
+  trpc.messages.onMessageReaction.useSubscription(
+    { chatId: chat.id },
+    {
+      onData: async (data) => {
+        await refetch();
+      },
+    }
+  );
 
   trpc.messages.onNewChatMessage.useSubscription(
     {
@@ -138,9 +169,7 @@ const MessagesChat: React.FunctionComponent<
                   "<unknown>"}
               </Text>
               {isFriendTyping ? (
-                <Text
-                  style={[styles.p, { color: COLORS.secondary, fontSize: 16 }]}
-                >
+                <Text style={[styles.p, { color: COLORS.blue, fontSize: 16 }]}>
                   typing...
                 </Text>
               ) : (
@@ -243,6 +272,12 @@ const MessagesChat: React.FunctionComponent<
             scrollViewRef.current.scrollToEnd({ animated: true })
           }
         >
+          <InChatModal
+            open={open}
+            setOpen={setOpen}
+            message={selectedMessage}
+            me={selectedMessage?.userId !== friend.id}
+          />
           <Text style={[styles.p, { textAlign: "center", margin: 10 }]}>
             Your chats with {friend.nickname} are end-to-end encrypted, not even{" "}
             {"askme"} team can access your messages.
@@ -253,6 +288,10 @@ const MessagesChat: React.FunctionComponent<
               key={message.id}
               message={message}
               me={message.userId !== friend.id}
+              onLongPress={() => {
+                setOpen(true);
+                setSelectedMessage(message);
+              }}
             />
           ))}
           <View style={{ height: 20 }} />

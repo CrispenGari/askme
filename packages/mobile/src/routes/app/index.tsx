@@ -16,7 +16,7 @@ import {
   useNotificationsToken,
   useSensorsPermission,
 } from "../../hooks";
-import { User, UserOnlineType } from "@askme/server";
+import { Message, User, UserOnlineType } from "@askme/server";
 import { MessageType } from "@askme/server/src/types";
 import { setMyLocation, setUserSettings } from "../../actions";
 
@@ -26,6 +26,11 @@ const App = () => {
   const [onlineUser, setOnlineUser] = useState<UserOnlineType | undefined>();
   const [newUserJoin, setNewUserJoined] = useState<User | null>(null);
   const [newMsg, setNewMsg] = useState<MessageType | undefined>(undefined);
+
+  const [newReaction, setNewReaction] = useState<{
+    message: Message;
+    reactor: User;
+  } | null>(null);
   const { granted: locationPermission } = useLocationPermission();
   // const { granted: sensorsPermission } = useSensorsPermission({});
   const { token } = useNotificationsToken({});
@@ -49,6 +54,15 @@ const App = () => {
       },
     }
   );
+  trpc.messages.onMessageReactionNotification.useSubscription(
+    { userId: user?.id ?? "" },
+    {
+      onData: (data) => {
+        setNewReaction(data);
+      },
+    }
+  );
+
   trpc.user.onNewUserJoined.useSubscription(undefined, {
     onData: (data) => {
       setNewUserJoined(data);
@@ -132,6 +146,29 @@ const App = () => {
       mounted = false;
     };
   }, [newMsg, token, openedChatId, user]);
+
+  React.useEffect(() => {
+    let mounted: boolean = true;
+    if (mounted && !!newMsg && !!token) {
+      (async () => {
+        if (
+          openedChatId !== newReaction?.message.chatId &&
+          !!newReaction &&
+          user?.id === newReaction.message.userId
+        ) {
+          await sendPushNotification(
+            token,
+            `askme - @${newReaction.reactor.nickname}`,
+            `Reacted "💓" to your message "${newReaction.message.message}"`
+          );
+          setNewReaction(null);
+        }
+      })();
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [newReaction, token, openedChatId]);
 
   React.useEffect(() => {
     let mounted: boolean = true;
