@@ -44,6 +44,8 @@ Here is the chat-flow of the application.
 
 ```
 
+The authentication is `token` based `authentication` using `JSON Web Tokens` (`jwt`).
+
 ### Auth Screens
 
 When the user is not authenticated, they will be able to go through the authentication flow with either `email` or `phone-number`. A One Time Password (`OTP`) with 6 digits will be sent via `email` or `sms` depending on which provider did you use for authentication between:
@@ -51,7 +53,7 @@ When the user is not authenticated, they will be able to go through the authenti
 - phone-number
 - email-address
 
-When provider verification completes you will be navigated to the `profile` screen where you will be able to set your `nickname` together with random `avatar`s.
+When provider verification completes you will be navigated to the `profile` screen where you will be able to set your `nickname` together with random `avatar`s. After successful authentication flow we will store the `jwt` authentication token in the `local-storage` to persists the auth session of the current user.
 
 Here are the screenshot of the authentication flow chat:
 
