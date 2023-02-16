@@ -12,14 +12,22 @@ import NotificationSettings from "../../../../components/NotificationSettings/No
 import { styles } from "../../../../styles";
 import { CircularIndicator } from "../../../../components";
 import { trpc } from "../../../../utils/trpc";
-import { setUserSettings } from "../../../../actions";
+import { setUserAction, setUserSettings } from "../../../../actions";
 
 const SettingsLanding: React.FunctionComponent<
   SettingsStackNavProps<"SettingsLanding">
 > = ({ navigation }) => {
   const { user, settings } = useSelector((state: StateType) => state);
-
   const [distance, setDistance] = React.useState<number>(0);
+  const dispatch = useDispatch();
+  trpc.settings.onUpdateSettings.useSubscription(
+    { userId: user?.id ?? "" },
+    {
+      onData: (data) => {
+        dispatch(setUserAction(data));
+      },
+    }
+  );
   const {
     isLoading,
     mutate: mutateUpdateSettings,
@@ -27,7 +35,6 @@ const SettingsLanding: React.FunctionComponent<
   } = trpc.settings.updateSettings.useMutation();
   const [on, setOn] = React.useState<boolean>(false);
 
-  const dispatch = useDispatch();
   const updateSettings = async () => {
     await mutateUpdateSettings({
       allowNotification: on,

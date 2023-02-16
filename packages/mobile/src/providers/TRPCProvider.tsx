@@ -6,12 +6,13 @@ import superjson from "superjson";
 import { createWSClient, wsLink } from "@trpc/client";
 import { AppRouter } from "@askme/server";
 import { getDUID, retrieve } from "../utils";
-import { severDomain, TOKEN_KEY } from "../constants";
+import { TOKEN_KEY } from "../constants";
+import { clientHttpURL, clientWsURL } from "@askme/common";
 interface Props {
   children: React.ReactNode;
 }
 const client = createWSClient({
-  url: `ws://${severDomain}/api/trpc`,
+  url: clientWsURL,
 });
 const TRPCProvider: React.FC<Props> = ({ children }) => {
   const links = [
@@ -20,7 +21,7 @@ const TRPCProvider: React.FC<Props> = ({ children }) => {
       condition: (op) => op.type === "subscription",
       true: wsLink<AppRouter>({ client }),
       false: httpBatchLink({
-        url: `https://${severDomain}/api/trpc`,
+        url: clientHttpURL,
         headers: async () => {
           const token = (await retrieve(TOKEN_KEY)) ?? "";
           return token

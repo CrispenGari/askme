@@ -1,6 +1,5 @@
 import { Dimensions } from "react-native";
 
-export const severDomain: string = `b0f7-197-98-127-119.ngrok.io`;
 export const messagesLimit: number = 10;
 export const constants = {
   SET_DUID: "SET_DUID",

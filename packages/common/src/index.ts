@@ -1,4 +1,6 @@
-export const domain: string = "a674-197-98-127-119.ngrok.io";
+export const domain: string = "474d-197-98-127-119.ngrok.io";
 
-export const serverURL: string = `https://${domain}`;
-export const clientURL: string = `${serverURL}/api/trpc`;
+export const serverBaseHttpURL: string = `https://${domain}`;
+export const serverBaseWsURL: string = `wss://${domain}`;
+export const clientHttpURL: string = `${serverBaseHttpURL}/api/trpc`;
+export const clientWsURL: string = `${serverBaseWsURL}/api/trpc`;

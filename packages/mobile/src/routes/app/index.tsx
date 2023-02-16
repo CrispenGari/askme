@@ -113,7 +113,12 @@ const App = () => {
 
   React.useEffect(() => {
     let mounted: boolean = true;
-    if (mounted && !!onlineUser && !!token) {
+    if (
+      mounted &&
+      !!onlineUser &&
+      !!token &&
+      !!user?.settings?.enableNotifications
+    ) {
       (async () => {
         await sendPushNotification(
           token,
@@ -127,10 +132,15 @@ const App = () => {
     return () => {
       mounted = false;
     };
-  }, [onlineUser, token]);
+  }, [onlineUser, token, user]);
   React.useEffect(() => {
     let mounted: boolean = true;
-    if (mounted && !!newMsg && !!token) {
+    if (
+      mounted &&
+      !!newMsg &&
+      !!token &&
+      !!user?.settings?.enableNotifications
+    ) {
       (async () => {
         if (openedChatId !== newMsg.chatId && newMsg.userId !== user?.id) {
           await sendPushNotification(
@@ -149,7 +159,12 @@ const App = () => {
 
   React.useEffect(() => {
     let mounted: boolean = true;
-    if (mounted && !!newMsg && !!token) {
+    if (
+      mounted &&
+      !!newMsg &&
+      !!token &&
+      !!user?.settings?.enableNotifications
+    ) {
       (async () => {
         if (
           openedChatId !== newReaction?.message.chatId &&
@@ -172,7 +187,13 @@ const App = () => {
 
   React.useEffect(() => {
     let mounted: boolean = true;
-    if (mounted && !!newUserJoin && !!token && user?.id) {
+    if (
+      mounted &&
+      !!newUserJoin &&
+      !!token &&
+      user?.id &&
+      !!user.settings?.enableNotifications
+    ) {
       (async () => {
         if (user.id !== newUserJoin.id) {
           if (user.settings?.enableNotifications) {

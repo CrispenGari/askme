@@ -10,11 +10,8 @@ import {
 import React, { useLayoutEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { MessagesStackNavProps } from "../../../../params";
-import {
-  AppBackButton,
-  CircularIndicator,
-  Message as MessageComponent,
-} from "../../../../components";
+import { AppBackButton, CircularIndicator } from "../../../../components";
+import MessageComponent from "../../../../components/Message/Message";
 import { trpc } from "../../../../utils/trpc";
 import { COLORS, FONTS } from "../../../../constants";
 import { styles } from "../../../../styles";

@@ -1,8 +1,42 @@
-import { updateSettingsSchema } from "../../schema/settings.schema";
+import { Settings, Location, User } from "@prisma/client";
+import { observable } from "@trpc/server/observable";
+import EventEmitter from "events";
+import { Events } from "../../constants";
+import {
+  onUpdateSettingsSchema,
+  updateSettingsSchema,
+} from "../../schema/settings.schema";
 import { publicProcedure, router } from "../../trpc/trpc";
 import { verifyJwt } from "../../utils";
-
+const ee = new EventEmitter({
+  captureRejections: true,
+});
 export const settingsRouter = router({
+  onUpdateSettings: publicProcedure
+    .input(onUpdateSettingsSchema)
+    .subscription(async ({ input: { userId } }) => {
+      return observable<
+        User & {
+          location: Location;
+          settings: Settings;
+        }
+      >((emit) => {
+        const handleEvent = (
+          user: User & {
+            location: Location;
+            settings: Settings;
+          }
+        ) => {
+          if (user.id === userId) {
+            emit.next(user);
+          }
+        };
+        ee.on(Events.ON_UPDATE_USER_SETTINGS, handleEvent);
+        return () => {
+          ee.off(Events.ON_UPDATE_USER_SETTINGS, handleEvent);
+        };
+      });
+    }),
   mySettings: publicProcedure.query(async ({ ctx: { req, prisma } }) => {
     try {
       const jwt = req.headers?.authorization?.split(/\s/)[1];
@@ -60,6 +94,19 @@ export const settingsRouter = router({
               maxSpaceDistance: distance,
             },
           });
+          const user = await prisma.user.findFirst({
+            where: {
+              id: settings.userId,
+            },
+            include: {
+              location: true,
+              settings: true,
+            },
+          });
+          if (!!user) {
+            ee.emit(Events.ON_UPDATE_USER_SETTINGS, user);
+          }
+
           return {
             settings,
           };

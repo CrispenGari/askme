@@ -4,8 +4,9 @@ import Redis from "ioredis";
 import { prisma } from "../prisma";
 
 export const createContext = ({ req, res }: CreateFastifyContextOptions) => {
-  const redis = new Redis();
-
+  const redis = new Redis({
+    host: process.env.REDIS_HOST,
+  });
   return {
     req,
     res,

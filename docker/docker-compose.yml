@@ -16,8 +16,6 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
       SERVICE_TAGS: dev
-    networks:
-      - internalnet
   redis:
     image: redis:6.2.7-alpine
     container_name: rediscontainer
@@ -27,11 +25,6 @@ services:
       - 6379:6379
     expose:
       - 6379
-    networks:
-      - internalnet
-networks:
-  internalnet:
-    driver: bridge
 volumes:
   redis_data:
     external: false

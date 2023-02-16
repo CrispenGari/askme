@@ -7,12 +7,12 @@
 			TRIAL_PHONE_NUMBER : string;
 			NODE_ENV : string;
 			JWT_SECRETE : string;
-			DB_HOST : string;
-			DB_PORT : string;
-			DB_USER : string;
-			DB_PASSWORD : string;
-			DB_NAME : string;
-			DB_CONNECTION_LIMIT : string;
+			DATABASE_USER : string;
+			DATABASE_PASSWORD : string;
+			DATABASE_HOST : string;
+			DATABASE_NAME : string;
+			DATABASE_PORT : string;
+			REDIS_HOST : string;
 			PORT : string;
 
     }
