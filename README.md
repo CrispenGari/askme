@@ -1,18 +1,34 @@
 ### askme
 
-This is a mobile application designed to connect people on the same complex to communicate with each other.
+This is a mobile application designed to connect people on the same complex to ask, interact and communicate with each other in the same location radius a.k.a as `spaces`. People in the same `space` can be able to:
+
+1. `2-way` communicate using messages
+2. see each other location.
 
 <p align="center">
     <img src="logo.png" width="50%" alt="cover" />
 </p>
 
+### What is used in this startup?
+
+1. `prisma` orm
+2. `fastify`- for server
+3. `web sockets` (with fastify)
+4. `postgres` - for `database`
+5. `redis` - for `cache`
+6. `react-native` - client
+7. `docker`
+8. `ngrok`
+
 ### App flow
 
 `askme` is a react native application that is using `monorepo` approach with `yarn-workspaces`. This monorepo application contains the following packages:
 
-1. `mobile`
-2. `server`
-3. `common`
+1. `mobile` - a react-native application initialised using `expo` consuming the `trpc` api.
+2. `server` - a `trpc` with `fastify` server that serves data from `prisma`-`postgres` database.
+3. `common` - contains shared code between `mobile` and `server`
+
+Here is the chat-flow of the application.
 
 ```
                               [GET USER LOCATION] ------> [LOCAL USERS]
@@ -62,19 +78,19 @@ An authenticated user can be able to see the following app screens and use the a
 
 In the app you can:
 
-- change settings
+- `change settings`
   - notifications
   - space radius (distance)
-- update profile
+- `update profile`
   - update avatar
   - update nickname
-- leave and join spaces
-- chat
+- `leave and join spaces`
+- `chat`
   - start new chats
   - continue chatting
   - react to messages
-- see people in your space
-- get notifications
+- `see people in your space`
+- `get notifications`
   - when new user in your space join
   - when the user went online
   - when the user sent a message
