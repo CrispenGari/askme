@@ -79,7 +79,7 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
         TERMS and CONDITIONS
       </Text>
       <Text style={[styles.h2, { textDecorationLine: "underline" }]}>
-        1. MOBILE APP AND MOBILE APP TERMS AND CONDITIONS OF USE
+        1. MOBILE APP TERMS AND CONDITIONS OF USE
       </Text>
       <Text style={[styles.p, { marginBottom: 10 }]}>
         This section sets out the terms and conditions ("Terms") of ASKME
@@ -120,12 +120,12 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
       </Text>
 
       <Text style={[styles.h2, { textDecorationLine: "underline" }]}>
-        2. CONTENT OF THE WEBSITE AND MOBILE APP
+        2. CONTENT OF THE MOBILE APP
       </Text>
       <Text style={[styles.p, { marginBottom: 10 }]}>
         Service Provider reserves the right to make improvements, to change or
         to discontinue, without notice, any aspect or feature any information or
-        content on the Website and the Mobile App.
+        content on the Mobile App.
       </Text>
       <Text style={[styles.p, { marginBottom: 10 }]}>
         Service Provider reserves the right to change and amend the products,
@@ -164,21 +164,21 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
       </Text>
       <Text style={[styles.p, { marginBottom: 10 }]}>
         Service Provider may provide links to third party websites on the
-        Website or Mobile App. These links are provided to the user for
+        Mobile App. These links are provided to the user for
         convenience purposes only and Service Provider does not endorse, nor
         does the inclusion of any link imply Service Provider's endorsement of,
-        such websites, or Mobile Apps, their owners, licensees or administrators
-        or such websites' content or security practices and operations.
+        Mobile Apps, their owners, licensees or administrators
+        or such Mobile Apps' content or security practices and operations.
       </Text>
       <Text style={[styles.p, { marginBottom: 10 }]}>
         While Service Provider tries to provide links only to reputable
-        websites, mobile apps or online partners, Service Provider cannot accept
+        mobile apps or online partners, Service Provider cannot accept
         responsibility or liability for the information provided on other
-        websites or mobile applications. Linked websites, mobile apps or pages
+        mobile applications. Linked mobile apps or pages
         are not under, nor subject to, the control of Service Provider. Service
         Provider is not responsible for and gives no warranties or makes any
         representations in respect of the privacy policies or practices of
-        linked or any third party or advertised websites on the Website or
+        linked or any third party or advertised websites on the
         Mobile App.
       </Text>
       <Text style={[styles.p, { marginBottom: 10 }]}>
@@ -187,9 +187,9 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
         access any linked website or any link(s) contained in a linked website,
         nor for any loss or damage of any sort incurred as a result of any
         dealings with, or as the result of the presence of such third party
-        linked websites on the Website or Mobile App. Any dealings that you may
+        linked websites on the Mobile App. Any dealings that you may
         have with any linked websites, including advertisers, found on the
-        Website or Mobile App, are solely between you and the third-party
+        Mobile App, are solely between you and the third-party
         website.
       </Text>
       <Text style={[styles.h2, { textDecorationLine: "underline" }]}>
@@ -200,26 +200,25 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
         party: copy (other than for backup, archival or disaster recovery
         purposes), reproduce, translate, adapt, vary, modify, lease, license,
         sub-license, encumber or in any other way deal with any part of the
-        Website or Mobile App for any reason and in any manner, unless it is
+        Mobile App for any reason and in any manner, unless it is
         consistent with the intent and purpose of these Terms; decompile,
-        disassemble or reverse engineer any portion of the Website or Mobile
+        disassemble or reverse engineer any portion of the Mobile
         App; write and/or develop any derivative of the Website or any other
-        software program based on the Website or Mobile App; modify or enhance
-        the Website or Mobile App. In the event of a user effecting any
-        modifications or enhancements to the Website or Mobile App in breach of
+        software program based on the Mobile App; modify or enhance
+        the Mobile App. In the event of a user effecting any
+        modifications or enhancements to the Mobile App in breach of
         this clause, such modifications and enhancements shall be the property
         of Service Provider; without Service Provider's prior written consent,
         provide, disclose, divulge or make available to or permit the use of or
-        give access to the Website or Mobile App by persons other than the user;
+        give access to the Mobile App by persons other than the user;
         remove any identification, trademark, copyright or other notices from
-        the Website or Mobile App; post or transmit, by means of reviews,
+        the Mobile App; post or transmit, by means of reviews,
         comments, suggestions, ideas, questions or other information through the
-        Website or Mobile App, any content which is unlawful, harmful,
+        Mobile App, any content which is unlawful, harmful,
         threatening, abusive, harassing, defamatory, vulgar, obscene,
         sexually-explicit, profane or hateful, or racially, ethnically or
         otherwise objectionable content of any kind; and/or notwithstanding
-        anything contained to the contrary in these Terms, use the Website or
-        Mobile App for any purpose other than personal, non-commercial and
+        anything contained to the contrary in these Terms, use the Mobile App for any purpose other than personal, non-commercial and
         information purposes.
       </Text>
       <Text style={[styles.h2, { textDecorationLine: "underline" }]}>
@@ -230,15 +229,15 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
         to all Service Provider's users, Service Provider hereby reserves the
         right to take whatever action it may deem necessary to preserve the
         security, integrity and reliability of its network and back-office
-        applications. You may not utilize the Website or Mobile App in any
+        applications. You may not utilize the Mobile App in any
         manner which may compromise the security of
       </Text>
       <Text style={[styles.p, { marginBottom: 10 }]}>
-        Service Provider's networks or tamper with the Website or Mobile App in
+        Service Provider's networks or tamper with the Mobile App in
         any manner whatsoever, which shall include without limitation, gaining
-        or attempting to gain unauthorized access to the Website or Mobile App,
+        or attempting to gain unauthorized access to the Mobile App,
         or delivering or attempting to deliver any unauthorized, damaging or
-        malicious code to the Website or the Mobile App, all of which is
+        malicious code to the Mobile App, all of which is
         expressly prohibited. Any person or entity which does so, or attempts to
         do so, shall be held criminally liable. Further, should Service Provider
         suffer any damage or loss, civil damages shall be claimed by Service
@@ -271,8 +270,7 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
         copyright and other intellectual property rights in all content,
         trademarks, software, data, material, including logos, databases, text,
         graphics, icons, hyperlinks, confidential information, designs,
-        agreements, and multimedia works, published on or via the Website
-        ("proprietary material") or via the Mobile App ("proprietary material"),
+        agreements, and multimedia works, published on or via the Mobile App ("proprietary material"),
         are the property of, or are licensed to, Service Provider and as such
         are protected from infringement by local and international legislation
         and treaties.
@@ -280,7 +278,7 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
       <Text style={[styles.p, { marginBottom: 10 }]}>
         By submitting reviews, comments and/or any other content (other than
         your personal information) to Service Provider for posting on the
-        Website or Mobile App, you automatically grant Service Provider and its
+        Mobile App, you automatically grant Service Provider and its
         affiliates a non-exclusive, royalty-free, perpetual, irrevocable right
         and license to use, reproduce, publish, translate, sub-license, copy and
         distribute such content in whole or in part worldwide, and to
@@ -292,20 +290,18 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
       <Text style={[styles.p, { marginBottom: 10 }]}>
         All rights not expressly granted are reserved and no right, title or
         interest in any proprietary material or information contained in this
-        Website or Mobile App is granted to you. Except with Service Provider's
-        express written permission, no proprietary material from this Website or
-        Mobile App may be copied or retransmitted.
+        Mobile App is granted to you. Except with Service Provider's
+        express written permission, no proprietary material from this Mobile App may be copied or retransmitted.
       </Text>
       <Text style={[styles.p, { marginBottom: 10 }]}>
         Irrespective of the existence of copyright, the user acknowledges that
-        Service Provider is the proprietor of all material on the Website or
-        Mobile App (except where a third party is indicated as the proprietor),
+        Service Provider is the proprietor of all material on the Mobile App (except where a third party is indicated as the proprietor),
         whether it constitutes confidential information or not, and that the
         user has no right, title or interest in any such material.
       </Text>
       <Text style={[styles.p, { marginBottom: 10 }]}>
         Service Provider authorizes you only to view, copy, temporarily download
-        to a local drive and to print the content of this Website or Mobile App,
+        to a local drive and to print the content of this Mobile App,
         or any part thereof, provided that such content is used for personal
         purposes and for information purposes only, and such content is used for
         non-commercial purposes.
@@ -315,8 +311,8 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
         7. RISK, LIMITATION OF LIABILITY AND INDEMNITY
       </Text>
       <Text style={[styles.p, { marginBottom: 10 }]}>
-        The user's use of this website or mobile app and the information
-        contained on the website or mobile app is entirely at the user's own
+        The user's use of this mobile app and the information
+        contained on the mobile app is entirely at the user's own
         risk and the user assumes full responsibility and risk of loss resulting
         from the use thereof.
       </Text>
@@ -339,26 +335,26 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
         including without limitation any direct, indirect, special, incidental,
         consequential or punitive damages, howsoever arising (whether in an
         action arising out of contract, statute, delict or otherwise) related to
-        the use of, or the inability to access or use the content of the website
+        the use of, or the inability to access or use the content of the mobile App
         or any functionality thereof, or the information contained on the
-        website or mobile app, or of any linked website or mobile app, even if
+        mobile app, or of any linked website or mobile app, even if
         service provider knows or should reasonably have known or is expressly
         advised thereof.
       </Text>
       <Text style={[styles.p, { marginBottom: 10 }]}>
         ii. The liability of service provider for faulty execution of the
-        website or mobile app as well as all damages suffered by the user,
+        mobile app as well as all damages suffered by the user,
         whether direct or indirect, as a result of the malfunctioning of the
         website shall be limited to service provider rectifying the malfunction,
         within a reasonable time and free of charge, provided that service
         provider is notified immediately of the damage or faulty execution of
-        the website or mobile app. This liability shall fall away and be
+        the mobile app. This liability shall fall away and be
         expressly excluded if the user attempts to correct or allows third
-        parties to correct or attempt to correct the website or mobile app
+        parties to correct or attempt to correct the mobile app
         without the prior written approval of service provider. However, in no
         event shall service provider be liable to the user for loss of profits
         or for special, incidental, consequential or punitive losses or damages
-        arising out of or in connection with the website or mobile app or its
+        arising out of or in connection with the mobile app or its
         use or the delivery, installation, servicing, performance or use of it
         in combination with other computer software.
       </Text>
@@ -367,7 +363,7 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
         and agree to hold service provider free from all loss, damages, claims
         and/or costs, of whatsoever nature suffered or incurred by service
         provider or instituted against service provider as a direct or indirect
-        result of: your use of the website or mobile app; software, programs and
+        result of: your use of the mobile app; software, programs and
         support services supplied by, obtained by or modified by you or any
         third party without the consent or knowledge of service provider; your
         failure to comply with any of the terms or any other requirements which
@@ -379,8 +375,7 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
       </Text>
       <Text style={[styles.p, { marginBottom: 10 }]}>
         Service provider makes no warranty or representation as to the
-        availability, accuracy or completeness of the content of the website or
-        mobile app. You expressly waive and renounce all your rights of whatever
+        availability, accuracy or completeness of the content of the mobile app. You expressly waive and renounce all your rights of whatever
         nature that you may have against service provider for any LOSS suffered
         by you, as a result of information supplied by service provider being
         incorrect, incomplete or inaccurate.
@@ -400,6 +395,8 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
         don't mean general, statistical, aggregated or anonymized information.
         Your use of our services signifies your consent to us collecting and
         using your personal information as specified below.
+        We are to provide only the estimated location of your where abouts, 
+        using a modifiable radius.
       </Text>
       <Text style={[styles.h2, { textDecorationLine: "underline" }]}>
         9. CONFIDENTIALITY
@@ -421,11 +418,11 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
         Service Provider is entitled without notice, in addition to any other
         remedy available to it at law or under these Terms, including obtaining
         an interdict, to cancel these Terms, limit or deny such user use of the
-        Website or Mobile App and services, or to claim specific performance of
+        mobile app and services, or to claim specific performance of
         any obligation whether or not the due date for performance has arrived,
         in either event without prejudice to Service Provider's right to claim
         damages, should any user: breach any of these Terms; in the sole
-        discretion of Service Provider, use the Website or Mobile App in an
+        discretion of Service Provider, use the mobile app in an
         unauthorized manner; or infringe any statute, regulation, ordinance or
         law
       </Text>
@@ -440,8 +437,7 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
       </Text>
       <Text style={[styles.p, { marginBottom: 10 }]}>
         You shall comply with all applicable laws, statues, ordinances and
-        regulations pertaining to your use of and access to this Website or
-        Mobile App.
+        regulations pertaining to your use of and access to this mobile app.
       </Text>
       <Text style={[styles.h2, { textDecorationLine: "underline" }]}>
         13.NOTICES
@@ -471,18 +467,18 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
       <Text style={[styles.p, { marginBottom: 10 }]}>
         These Terms shall be governed in all respects by the laws of the
         Republic of South Africa as such laws are applied to agreements entered
-        into and to be performed within South Africa. This Website is
+        into and to be performed within South Africa. This mobile app is
         controlled, operated and administered by Service Provider from its
         offices within the Republic of South Africa. Service Provider makes no
-        representation that the content of the Website or Mobile App is
+        representation that the content of the mobile app is
         appropriate or available for use outside of South Africa. Access to the
-        Website or Mobile App from territories or countries where the content of
-        the Website is illegal is prohibited. Users may not use this Website in
+        mobile app from territories or countries where the content of
+        the mobile app is illegal is prohibited. Users may not use this mobile app in
         violation of South African export laws and regulations. If the user
-        accesses this Website or Mobile App from locations outside of South
+        accesses this mobile app from locations outside of South
         Africa, that user is responsible for compliance with all local laws.
         Service Provider does not guarantee continuous, uninterrupted or secure
-        access to our services, as operation of our Website or Mobile App may be
+        access to our services, as operation of our mobile app may be
         interfered with as a result of a number of factors which are outside of
         our control.
       </Text>
