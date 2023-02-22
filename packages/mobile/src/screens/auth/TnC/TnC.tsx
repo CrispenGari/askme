@@ -110,7 +110,8 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
       <Text style={[styles.p, { marginBottom: 10 }]}>
         We will however give you prior notice where we have collected personal
         information from you and the purpose for which we collected that
-        information, is affected by the intended amendment.
+        information, is affected by the intended amendment. Such as device location,
+        user login details and contact details.
       </Text>
       <Text style={[styles.p, { marginBottom: 10 }]}>
         If there is anything in these Terms that you do not understand then
@@ -229,15 +230,15 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
         to all Service Provider's users, Service Provider hereby reserves the
         right to take whatever action it may deem necessary to preserve the
         security, integrity and reliability of its network and back-office
-        applications. You may not utilize the Mobile App in any
-        manner which may compromise the security of
+        applications. You may not utilize the mobile app in any
+        manner which may compromise the security of the mobile app.
       </Text>
       <Text style={[styles.p, { marginBottom: 10 }]}>
         Service Provider's networks or tamper with the Mobile App in
         any manner whatsoever, which shall include without limitation, gaining
         or attempting to gain unauthorized access to the Mobile App,
         or delivering or attempting to deliver any unauthorized, damaging or
-        malicious code to the Mobile App, all of which is
+        malicious code to the mobile app, all of which is
         expressly prohibited. Any person or entity which does so, or attempts to
         do so, shall be held criminally liable. Further, should Service Provider
         suffer any damage or loss, civil damages shall be claimed by Service
@@ -290,7 +291,7 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
       <Text style={[styles.p, { marginBottom: 10 }]}>
         All rights not expressly granted are reserved and no right, title or
         interest in any proprietary material or information contained in this
-        Mobile App is granted to you. Except with Service Provider's
+        mobile app is granted to you. Except with Service Provider's
         express written permission, no proprietary material from this Mobile App may be copied or retransmitted.
       </Text>
       <Text style={[styles.p, { marginBottom: 10 }]}>
@@ -301,7 +302,7 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
       </Text>
       <Text style={[styles.p, { marginBottom: 10 }]}>
         Service Provider authorizes you only to view, copy, temporarily download
-        to a local drive and to print the content of this Mobile App,
+        to a local drive and to print the content of this mobile app,
         or any part thereof, provided that such content is used for personal
         purposes and for information purposes only, and such content is used for
         non-commercial purposes.
@@ -324,7 +325,8 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
         damage suffered by the user as a result thereof. Service provider
         reserves the right to request independent verification of any
         information transmitted via e-mail and the user consents to such
-        verification should service provider deem it necessary.
+        verification should service provider deem it necessary. And Location sharing
+        via radius toggling is monitored.
       </Text>
       <Text style={[styles.p, { marginBottom: 10 }]}>
         To the extent permissible by law:
@@ -375,7 +377,8 @@ const TnC: React.FunctionComponent<AuthNavProps<"TnC">> = ({ navigation }) => {
       </Text>
       <Text style={[styles.p, { marginBottom: 10 }]}>
         Service provider makes no warranty or representation as to the
-        availability, accuracy or completeness of the content of the mobile app. You expressly waive and renounce all your rights of whatever
+        availability, accuracy or completeness of the content of the mobile app. 
+        You expressly waive and renounce all your rights of whatever
         nature that you may have against service provider for any LOSS suffered
         by you, as a result of information supplied by service provider being
         incorrect, incomplete or inaccurate.
